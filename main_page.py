@@ -3,20 +3,7 @@ import pygame
 import sys
 import webbrowser
 
-"""쓸 변수들 정리"""
-GAME_LOBBY_IMG = "gameLobby.png" #주소 기입 방식 찾아봤음
-WHITE = (192, 192, 192)
-L_BLACK = (95,95,95)
-BLACK = (0,0,0)
-FONT = "Fake Receipt.otf"
-LOGO = pygame.image.load('Buckshot_logo.png')
-LOGO = pygame.transform.scale(LOGO, (950,750))
-KANGNAM_LOGO = pygame.image.load('KangnamUniversity.png')
-KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (200,200))
-MENU_BULLET_IMG_1 = pygame.image.load('menu_bullet_img1.png')
-MENU_BULLET_IMG_2 = pygame.image.load('menu_bullet_img2.png')
-SCROLL_SPEED = 15
-TIME = pygame.time.Clock()
+
 
 """
 초기 설정
@@ -31,6 +18,25 @@ screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREE
 screen_height_half = screen_height/2
 screen_width_half = screen_width/2
 
+"""쓸 변수들 정리"""
+GAME_LOBBY_IMG = "gameLobby.png" #주소 기입 방식 찾아봤음
+WHITE = (192, 192, 192)
+L_BLACK = (95,95,95)
+BLACK = (0,0,0)
+FONT = "Fake Receipt.otf"
+LOGO = pygame.image.load('Buckshot_logo.png').convert_alpha()
+LOGO = pygame.transform.scale(LOGO, (950,750))
+KANGNAM_LOGO = pygame.image.load('KangnamUniversity.png').convert_alpha()
+KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (200,200))
+MENU_BULLET_IMG_1 = pygame.image.load('menu_bullet_img1.png').convert_alpha()
+MENU_BULLET_IMG_2 = pygame.image.load('menu_bullet_img2.png').convert_alpha()
+MENU_SCROLL_SPEED = 5
+TIME = pygame.time.Clock()
+OUR_LOGO = pygame.image.load('our_logo.png').convert_alpha()
+OUR_LOGO = pygame.transform.scale(OUR_LOGO, (1000,800))
+CREDIT_SCROLL_SPEED = 3
+
+#초기 화면 설정
 state = 'menu'
 
 
@@ -135,14 +141,14 @@ kangnam_link_btn = Button(KANGNAM_LOGO, screen_width - 200 + 100, screen_height 
 
 menu_buttons = [start_btn, multi_btn, option_btn, credit_btn, exit_btn, kangnam_link_btn]
 
-credit_exit_btn = Button(None, screen_width_half, screen_height_half + 670, "EXIT", get_font(80), WHITE, L_BLACK)
-# 위 크래딧 버튼은 후에 또 바꿀 예정
+# credit_exit_btn = Button(None, screen_width_half, screen_height_half + 670, "EXIT", get_font(80), WHITE, L_BLACK)
+# # 위 크래딧 버튼은 후에 또 바꿀 예정
 
 #총알 내려오는 거 홤수화
 def scroll_bullet():
     global MENU_BULLET_IMG_1_y_pos, MENU_BULLET_IMG_2_y_pos
-    MENU_BULLET_IMG_1_y_pos +=SCROLL_SPEED
-    MENU_BULLET_IMG_2_y_pos +=SCROLL_SPEED
+    MENU_BULLET_IMG_1_y_pos +=MENU_SCROLL_SPEED
+    MENU_BULLET_IMG_2_y_pos +=MENU_SCROLL_SPEED
 
     if MENU_BULLET_IMG_1_y_pos >=screen_height:
         MENU_BULLET_IMG_1_y_pos = MENU_BULLET_IMG_2_y_pos - screen_height
@@ -172,28 +178,51 @@ def menu_blit(mouse_pos):
         btn.check_for_hover(mouse_pos)
         btn.update(screen)
 
-#크래딧 블릿 함수
-def credit_blit(mouse_pos):
-    text_font = get_font(50)
-    credit_text = text_font.render("Credits", True, WHITE)
-    credit_rect = credit_text.get_rect(center=(screen_width_half, screen_height_half - 100))
-    screen.blit(credit_text, credit_rect)
+#크래딧에 들어갈 요소랑 기본 위치 세팅
+credit_elements = [
+        (OUR_LOGO, 0),
+        (get_font(50).render("Credits", True, WHITE),900),
+        (get_font(50).render("Credits", True, WHITE),980),
+        (get_font(50).render("Credits", True, WHITE),1070),
+        (get_font(50).render("Credits", True, WHITE),1160),
+        (get_font(50).render("Credits", True, WHITE),1250),
+        (get_font(50).render("Credits", True, WHITE),1340),
+        (get_font(50).render("Credits", True, WHITE),1430),
+        (get_font(50).render("Credits", True, WHITE),1520)
+    ]
+credits_elements_y_pos = screen_height
+max_space = credit_elements[-1][1]
 
-    credit_exit_btn.check_for_hover(mouse_pos)
-    credit_exit_btn.update(screen)
+#크래딧 블릿 함수
+def credit_blit():
+    global state, credits_elements_y_pos
+    screen.fill(BLACK)
+
+    for element, space in credit_elements:
+        y = credits_elements_y_pos + space
+        if isinstance(element, pygame.Surface):
+                IMG_size_width = element.get_rect().size[0]
+                IMG_x_position = screen_width_half-(IMG_size_width/2)
+                screen.blit(element, (IMG_x_position, y))
+        else:  # 텍스트일 경우
+            TEXT_size_width = element.get_rect().size[0]
+            TEXT_x_position = screen_width_half-(TEXT_size_width/2)
+            screen.blit(element, (TEXT_x_position, y))
+    credits_elements_y_pos -= CREDIT_SCROLL_SPEED
+    if credits_elements_y_pos + max_space + 100 < 0:  #여기 들어간 숫자는 폰트 크기에 + 20한 거임.
+        state = 'menu'
+        credits_elements_y_pos = screen_height
+        
 
 # --- 메인 게임 루프 ---
 def main():
-    global state
+    global state, credits_elements_y_pos
 
     running = True
     while running:
-        TIME.tick(60)
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if state == 'menu':
@@ -212,15 +241,15 @@ def main():
                         running = False
                     elif kangnam_link_btn.check_for_input(mouse_pos):
                         webbrowser.open('https://web.kangnam.ac.kr/')
-                elif state == "credit":
-                    if credit_exit_btn.check_for_input(mouse_pos):
-                        print("크레딧 탈출 버튼 눌림")
-                        state = "menu"
+            if state == 'credit' and event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                state = 'menu'
+                credits_elements_y_pos = screen_height
         if state == 'menu':
             menu_blit(mouse_pos)
         elif state == 'credit':
-            credit_blit(mouse_pos)
+            credit_blit()
         pygame.display.update()
+        TIME.tick(60)
 
     pygame.quit()
     sys.exit()
