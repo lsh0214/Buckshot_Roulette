@@ -13,10 +13,19 @@ LOGO = pygame.image.load('Buckshot_logo.png')
 LOGO = pygame.transform.scale(LOGO, (950,750))
 KANGNAM_LOGO = pygame.image.load('KangnamUniversity.png')
 KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (200,200))
+MENU_BULLET_IMG_1 = pygame.image.load('menu_bullet_img1.png')
+MENU_BULLET_IMG_2 = pygame.image.load('menu_bullet_img2.png')
+SCROLL_SPEED = 15
+TIME = pygame.time.Clock()
 
 def get_font(size):
-    # return pygame.font.Font("assets/font.ttf", size) # 폰트 파일이 있다면
     return pygame.font.Font(FONT, size) # 기본 폰트 사용
+
+#커서 바뀌게 만들 함수들입니다.
+def mouse_cursor_hand():
+    return pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+def mouse_cursor_arrow():
+    return pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
 
 class Button():
@@ -81,16 +90,23 @@ class Button():
         if self.image_btn is None:
             if position[0] in range(self.rect.left, self.rect.right) and \
             position[1] in range(self.rect.top, self.rect.bottom):
-                # 마우스가 버튼 위에 있음 -> Hovering Color
                 self.text_surface = self.font.render(self.text_input, True, self.hovering_color)
+                
             else:
-                # 마우스가 버튼 밖에 있음 -> Base Color
                 self.text_surface = self.font.render(self.text_input, True, self.base_color)
+                
+        else:
+            if position[0] in range(self.btn_rect.left, self.btn_rect.right) and \
+            position[1] in range(self.btn_rect.top, self.btn_rect.bottom):
+                mouse_cursor_hand()
+            else:
+                mouse_cursor_arrow()
 
 # --- 메인 게임 루프 ---
 
 def main():
     pygame.init()
+    global MENU_BULLET_IMG_1, MENU_BULLET_IMG_2
 
     # 메인 모니터의 해상도 자동 감지
     for m in get_monitors():
@@ -103,8 +119,14 @@ def main():
     screen_height_half = screen_height/2
     screen_width_half = screen_width/2
 
+    MENU_BULLET_IMG_1 = pygame.transform.scale(MENU_BULLET_IMG_1, (screen_width,screen_height))
+    MENU_BULLET_IMG_2 = pygame.transform.scale(MENU_BULLET_IMG_2, (screen_width,screen_height))
+    MENU_BULLET_IMG_1_y_pos = 0
+    MENU_BULLET_IMG_2_y_pos = screen_height
+
     running = True
     while running:
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -128,6 +150,7 @@ def main():
 
         while 1:
             screen.fill(BLACK)
+            TIME.tick(60)
 
             txt = get_font(40)
             version_txt = txt.render('0.0.1(Prototype)', True, L_BLACK)
@@ -135,6 +158,21 @@ def main():
 
             LOGO_size_width = LOGO.get_rect().size[0]
             # LOGO_size_height = LOGO.get_rect().size[1]
+
+            MENU_BULLET_IMG_1_y_pos +=SCROLL_SPEED
+            MENU_BULLET_IMG_2_y_pos +=SCROLL_SPEED
+
+            if MENU_BULLET_IMG_1_y_pos >=screen_height:
+                MENU_BULLET_IMG_1_y_pos = MENU_BULLET_IMG_2_y_pos - screen_height
+            if MENU_BULLET_IMG_2_y_pos >=screen_height:
+                MENU_BULLET_IMG_2_y_pos = MENU_BULLET_IMG_1_y_pos - screen_height
+
+            screen.blit(MENU_BULLET_IMG_1, (0,MENU_BULLET_IMG_1_y_pos))
+            screen.blit(MENU_BULLET_IMG_2, (0,MENU_BULLET_IMG_2_y_pos))
+            screen.blit(version_txt,[30, screen_height-80])
+
+            
+                
 
             LOGO_x_position = screen_width_half-(LOGO_size_width/2)
             screen.blit(LOGO, (LOGO_x_position, 250))
