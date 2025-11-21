@@ -1,8 +1,9 @@
+import math
 from screeninfo import get_monitors
 import pygame
 import sys
 import webbrowser
-
+import random
 
 """
 초기 설정
@@ -18,21 +19,28 @@ screen_height_half = screen_height/2
 screen_width_half = screen_width/2
 
 """쓸 변수들 정리"""
-GAME_LOBBY_IMG = pygame.image.load("GameLobby.png").convert_alpha() #주소 기입 방식 찾아봤음
+GAME_LOBBY_IMG = pygame.image.load("game_lobby_img/GameLobby.png").convert_alpha() #주소 기입 방식 찾아봤음
 GAME_LOBBY_IMG = pygame.transform.scale(GAME_LOBBY_IMG, (screen_width,screen_height))
+CORRIDOR_lightOn_IMG = pygame.image.load("game_lobby_img/corridor_lightOn.png").convert_alpha()
+CORRIDOR_lightOn_IMG = pygame.transform.scale(CORRIDOR_lightOn_IMG, (screen_width,screen_height))
+CORRIDOR_lightOff_IMG = pygame.image.load("game_lobby_img/corridor_lightOff.png").convert_alpha()
+CORRIDOR_lightOff_IMG = pygame.transform.scale(CORRIDOR_lightOff_IMG, (screen_width,screen_height))
+LOBBY_DOOR_IMG = pygame.image.load("game_lobby_img/lobby_door.png").convert_alpha()
+
+
 WHITE = (192, 192, 192)
 L_BLACK = (95,95,95)
 BLACK = (0,0,0)
 FONT = "Fake Receipt.otf"
-LOGO = pygame.image.load('Buckshot_logo.png').convert_alpha()
+LOGO = pygame.image.load('menu_img/Buckshot_logo.png').convert_alpha()
 LOGO = pygame.transform.scale(LOGO, (950,750))
-KANGNAM_LOGO = pygame.image.load('KangnamUniversity.png').convert_alpha()
+KANGNAM_LOGO = pygame.image.load('menu_img/KangnamUniversity.png').convert_alpha()
 KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (200,200))
-MENU_BULLET_IMG_1 = pygame.image.load('menu_bullet_img1.png').convert_alpha()
-MENU_BULLET_IMG_2 = pygame.image.load('menu_bullet_img2.png').convert_alpha()
+MENU_BULLET_IMG_1 = pygame.image.load('menu_img/menu_bullet_img1.png').convert_alpha()
+MENU_BULLET_IMG_2 = pygame.image.load('menu_img/menu_bullet_img2.png').convert_alpha()
 MENU_SCROLL_SPEED = 5
 TIME = pygame.time.Clock()
-OUR_LOGO = pygame.image.load('our_logo.png').convert_alpha()
+OUR_LOGO = pygame.image.load('credit_img/our_logo.png').convert_alpha()
 OUR_LOGO = pygame.transform.scale(OUR_LOGO, (1000,800))
 CREDIT_SCROLL_SPEED = 3
 
@@ -74,14 +82,16 @@ class Button():
             self.text = self.font.render(self.text_input, True, self.base_color)
             # 3. 버튼 사각형(rect) 만들기
             # 텍스트 이미지의 rect를 가져옴
-            self.image = self.text 
+            self.image = pygame.Surface((self.text.get_width(), self.text.get_height()))
+            self.image.fill((0, 0, 0))
+            
             self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
+            
+            
             # 4. 현재 텍스트 (마우스 오버 효과를 위해)
             self.text_surface = self.text
         else:
-            self.btn_rect = self.image_btn.get_rect(center=(self.x_pos, self.y_pos))
-        
-        
+            self.btn_rect = self.image_btn.get_rect(center=(self.x_pos, self.y_pos))   
 
     def update(self, screen):
         """
@@ -127,6 +137,11 @@ class Button():
                 mouse_cursor_hand()
             else:
                 mouse_cursor_arrow()
+        
+    
+
+
+
 #스크롤 위치 세팅
 MENU_BULLET_IMG_1 = pygame.transform.scale(MENU_BULLET_IMG_1, (screen_width,screen_height))
 MENU_BULLET_IMG_2 = pygame.transform.scale(MENU_BULLET_IMG_2, (screen_width,screen_height))
@@ -188,7 +203,6 @@ def fade_in():
     return
 def fade_out():
     global screen
-    # state = "credit"
     screen.fill(BLACK)
     img_positions = scroll_bullet(1)
     for i in range(2):
@@ -207,6 +221,7 @@ def fade_out():
         pygame.time.delay(20)
     MENU_BULLET_IMG_1.set_alpha(255)
     MENU_BULLET_IMG_2.set_alpha(255)
+    return 1
 
 #크래딧에 들어갈 요소랑 기본 위치 세팅
 credit_elements = [
@@ -243,19 +258,85 @@ def credit_blit():
         state = 'menu'
         credits_elements_y_pos = screen_height
 
+
+
+#카메라 함수들 정리
+"""
+지금 필요한 거 정리
+1. 화장실에서 바라보는 문 이미지 불러오고 그 이미지 screen에 맞추기
+2. 걸음을 걸을 때 움직이는 카메라 워킹 함수
+3. 문 열리고 엑션 단축하기 위해서 이미지 갈아끼면서 재활용 가능한 화면으로
+4. 로비에서 카메라가 이리저리 흔들리는 거 표현하자.
+"""
+#카메라 함수들 정리
+shaking_bool = True
+shaking_range = 20
+# 레미니스케이트 곡선(∞ 모양)을 위한 각도
+shake_angle = 0
+shake_speed = 0.02  # 회전 속도 (작을수록 느림)
+
+def shaking_camera():
+    global shake_angle
+    
+    if shaking_bool:
+        # 레미니스케이트 곡선 (옆으로 누운 8자) 공식
+        # x = a * cos(t) / (1 + sin²(t))
+        # y = a * sin(t) * cos(t) / (1 + sin²(t))
+        
+        # 각도 증가
+        shake_angle += shake_speed
+        
+        # 레미니스케이트 곡선 계산
+        sin_t = math.sin(shake_angle)
+        cos_t = math.cos(shake_angle)
+        denominator = 1 + sin_t * sin_t
+        
+        x = shaking_range * cos_t / denominator
+        y = shaking_range * sin_t * cos_t / denominator
+        
+        return (int(x), int(y))
+    else:
+        return (0, 0)
+
+#게임 로비 필요한 요소들 정리
+
+LOBBY_DOOR_IMG = pygame.transform.scale(LOBBY_DOOR_IMG, (0.1881944*screen_width, 0.492778*screen_height))
+# 버튼을 전역으로 선언하지 않고, 함수 내에서 생성
+LOBBY_DOOR_btn = Button(LOBBY_DOOR_IMG, int(0.608799*screen_width), int(0.492778*screen_height))
+
+
 # 게임 로비 블릿 함수
-def gamelobby_blit():
-    global state, screen
-    screen.blit(GAME_LOBBY_IMG, (0, 0))
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            state = 'menu'
+def gamelobby_blit(mouse_pos):
+    global screen, LOBBY_DOOR_btn
+    # 흔들림 오프셋 가져오기 (∞ 모양)
+    shake_offset = shaking_camera()
+    
+    # 배경 이미지 그리기 (흔들림 적용)
+    screen.blit(GAME_LOBBY_IMG, shake_offset)
+    
+    # 버튼 위치 업데이트 (흔들림 적용)
+    LOBBY_DOOR_btn.x_pos = int(0.608799*screen_width) + shake_offset[0]
+    LOBBY_DOOR_btn.y_pos = int(0.492778*screen_height) + shake_offset[1]
+    LOBBY_DOOR_btn.btn_rect = LOBBY_DOOR_btn.image_btn.get_rect(center=(LOBBY_DOOR_btn.x_pos, LOBBY_DOOR_btn.y_pos))
+    
+    # 버튼 그리기
+    LOBBY_DOOR_btn.check_for_hover(mouse_pos)
+    LOBBY_DOOR_btn.update(screen) 
+
+
+# 복도로 가는 장면 함수
+def lobby_to_corridor():
+    
     return
 
+# 복도 블릿 함수
+def corridor_blit():
+    global state, screen
+    screen.blit(CORRIDOR_lightOff_IMG,(0,0))
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos
+    global state, credits_elements_y_pos, shaking_bool, shake_angle, check_num
 
     running = True
     while running:
@@ -263,12 +344,19 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if state == 'credit' or state == 'lobby' or state == 'corridor':
+                    state = 'menu'
+                    shaking_bool = True
+                    shake_angle = 0
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
                         print("시작 버튼 눌림")
-                        fade_out()
+                        check_num = fade_out()
                         state = 'lobby'
+                        shaking_bool = True
+                        shake_angle = 0
                         # 게임 시작 로직 추가
                     elif multi_btn.check_for_input(mouse_pos):
                         print("멀티 버튼 눌림")
@@ -277,21 +365,27 @@ def main():
                     elif credit_btn.check_for_input(mouse_pos):
                         print("크레딧 버튼 눌림")
                         fade_out()
-                        state = "credit"
+                        state = 'credit'
+                        credits_elements_y_pos = screen_height
                     elif exit_btn.check_for_input(mouse_pos):
                         print("탈출 버튼 눌림")
                         running = False
                     elif kangnam_link_btn.check_for_input(mouse_pos):
                         webbrowser.open('https://web.kangnam.ac.kr/')
-            if state == 'credit' and event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                state = 'menu'
-                credits_elements_y_pos = screen_height
+                        
+            
+                elif state == 'lobby' and LOBBY_DOOR_btn.check_for_input(mouse_pos):
+                    state = 'corridor'
+                    shaking_bool = False
+        screen.fill(BLACK)
         if state == 'menu':
             menu_blit(mouse_pos)
         elif state == 'credit':
             credit_blit()
         elif state == 'lobby':
-            gamelobby_blit()
+            gamelobby_blit(mouse_pos)
+        elif state == 'corridor':
+            corridor_blit()
         pygame.display.update()
         TIME.tick(60)
 
