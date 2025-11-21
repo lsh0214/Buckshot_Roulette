@@ -37,16 +37,16 @@ def rint(int_start,int_end=None):
 # print("4의 개수:", List.count(4))
 # print("5의 개수:", List.count(5))
 # print("6의 개수:", List.count(6))
-def Shuffle(List):
+def Shuffle(List):#피셔 예이츠 셔플 방식
     for i in reversed(range(1, len(List))):
         j = rint(i)
         List[i], List[j]= List[j],List[i]
     return None
 
-fruits = [
-        "사과", "바나나", "체리", " 딸기", "포도", 
-        "수박", "키위", "망고", "오렌지", "파인애플"
-    ]
-for i in range(10):
-    Shuffle(fruits)
-    print(fruits)
+# fruits = [
+#         "사과", "바나나", "체리", " 딸기", "포도", 
+#         "수박", "키위", "망고", "오렌지", "파인애플"
+#     ]
+# for i in range(10):
+#     Shuffle(fruits)
+#     print(fruits)
