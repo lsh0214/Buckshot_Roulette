@@ -4,7 +4,6 @@ import sys
 import webbrowser
 
 
-
 """
 초기 설정
 """
@@ -19,7 +18,8 @@ screen_height_half = screen_height/2
 screen_width_half = screen_width/2
 
 """쓸 변수들 정리"""
-GAME_LOBBY_IMG = "gameLobby.png" #주소 기입 방식 찾아봤음
+GAME_LOBBY_IMG = pygame.image.load("GameLobby.png").convert_alpha() #주소 기입 방식 찾아봤음
+GAME_LOBBY_IMG = pygame.transform.scale(GAME_LOBBY_IMG, (screen_width,screen_height))
 WHITE = (192, 192, 192)
 L_BLACK = (95,95,95)
 BLACK = (0,0,0)
@@ -49,6 +49,9 @@ def mouse_cursor_hand():
     return pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
 def mouse_cursor_arrow():
     return pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+
+
 
 #버튼 클래스
 class Button():
@@ -145,7 +148,7 @@ menu_buttons = [start_btn, multi_btn, option_btn, credit_btn, exit_btn, kangnam_
 # # 위 크래딧 버튼은 후에 또 바꿀 예정
 
 #총알 내려오는 거 홤수화
-def scroll_bullet():
+def scroll_bullet(stop):
     global MENU_BULLET_IMG_1_y_pos, MENU_BULLET_IMG_2_y_pos
     MENU_BULLET_IMG_1_y_pos +=MENU_SCROLL_SPEED
     MENU_BULLET_IMG_2_y_pos +=MENU_SCROLL_SPEED
@@ -154,11 +157,13 @@ def scroll_bullet():
         MENU_BULLET_IMG_1_y_pos = MENU_BULLET_IMG_2_y_pos - screen_height
     if MENU_BULLET_IMG_2_y_pos >=screen_height:
         MENU_BULLET_IMG_2_y_pos = MENU_BULLET_IMG_1_y_pos - screen_height
+    if stop:
+        return [MENU_BULLET_IMG_1_y_pos, MENU_BULLET_IMG_2_y_pos]
 
 #메뉴 블릿 함수
 def menu_blit(mouse_pos):
     screen.fill(BLACK)
-    scroll_bullet()
+    scroll_bullet(0)
     
     #버전 텍스트
     txt = get_font(40)
@@ -178,6 +183,31 @@ def menu_blit(mouse_pos):
         btn.check_for_hover(mouse_pos)
         btn.update(screen)
 
+# 페이드 인 아웃 함수
+def fade_in():
+    return
+def fade_out():
+    global screen
+    # state = "credit"
+    screen.fill(BLACK)
+    img_positions = scroll_bullet(1)
+    for i in range(2):
+        if i:
+            MENU_BULLET_IMG_2_y_pos = img_positions[i]
+        else:
+            MENU_BULLET_IMG_1_y_pos = img_positions[i]
+    for opacity in range(255,0,-5):
+        screen.fill(BLACK)
+        MENU_BULLET_IMG_1.set_alpha(opacity)
+        MENU_BULLET_IMG_2.set_alpha(opacity)
+
+        screen.blit(MENU_BULLET_IMG_1, (0, MENU_BULLET_IMG_1_y_pos))
+        screen.blit(MENU_BULLET_IMG_2, (0, MENU_BULLET_IMG_2_y_pos))
+        pygame.display.update()
+        pygame.time.delay(20)
+    MENU_BULLET_IMG_1.set_alpha(255)
+    MENU_BULLET_IMG_2.set_alpha(255)
+
 #크래딧에 들어갈 요소랑 기본 위치 세팅
 credit_elements = [
         (OUR_LOGO, 0),
@@ -189,7 +219,7 @@ credit_elements = [
         (get_font(50).render("Credits", True, WHITE),1340),
         (get_font(50).render("Credits", True, WHITE),1430),
         (get_font(50).render("Credits", True, WHITE),1520)
-    ]
+]
 credits_elements_y_pos = screen_height
 max_space = credit_elements[-1][1]
 
@@ -212,7 +242,16 @@ def credit_blit():
     if credits_elements_y_pos + max_space + 100 < 0:  #여기 들어간 숫자는 폰트 크기에 + 20한 거임.
         state = 'menu'
         credits_elements_y_pos = screen_height
-        
+
+# 게임 로비 블릿 함수
+def gamelobby_blit():
+    global state, screen
+    screen.blit(GAME_LOBBY_IMG, (0, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            state = 'menu'
+    return
+
 
 # --- 메인 게임 루프 ---
 def main():
@@ -228,6 +267,8 @@ def main():
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
                         print("시작 버튼 눌림")
+                        fade_out()
+                        state = 'lobby'
                         # 게임 시작 로직 추가
                     elif multi_btn.check_for_input(mouse_pos):
                         print("멀티 버튼 눌림")
@@ -235,6 +276,7 @@ def main():
                         print("옵션 버튼 눌림")
                     elif credit_btn.check_for_input(mouse_pos):
                         print("크레딧 버튼 눌림")
+                        fade_out()
                         state = "credit"
                     elif exit_btn.check_for_input(mouse_pos):
                         print("탈출 버튼 눌림")
@@ -248,6 +290,8 @@ def main():
             menu_blit(mouse_pos)
         elif state == 'credit':
             credit_blit()
+        elif state == 'lobby':
+            gamelobby_blit()
         pygame.display.update()
         TIME.tick(60)
 
