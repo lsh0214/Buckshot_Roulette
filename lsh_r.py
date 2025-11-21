@@ -5,7 +5,10 @@ import os
 # 이를 인덱싱으로 집어내면 랜덤 노이즈의 바이트를 10진수의 int형태로 받을 수 잇다.
 # 랜덤 숫자 기본 형태 0~255: int
 
-def rint(int_start,int_end):
+def rint(int_start,int_end=None):
+    if int_end is None:
+        int_end = int_start
+        int_start = 0
     int_range=int_end-int_start
     bit_len=int_range.bit_length()
     os_bit=(bit_len +7)// 8
@@ -22,11 +25,11 @@ def rint(int_start,int_end):
 #모든 범위로써 만드는 원하는 정수 뽑기
 
 #로직 테스트
-List=[]
-for i in range(1,300000):
-    List.append(rint(1,999999999999999999999))
-    if i % 1000 == 0:
-        print(List)
+# List=[]
+# for i in range(1,300000):
+#     List.append(rint(1,6))
+#     if i % 1000 == 0:
+#         print(".",end="")
 # print("")
 # print("1의 개수:", List.count(1))
 # print("2의 개수:", List.count(2))
@@ -34,6 +37,16 @@ for i in range(1,300000):
 # print("4의 개수:", List.count(4))
 # print("5의 개수:", List.count(5))
 # print("6의 개수:", List.count(6))
-def Shuffle():
-    print("os")
+def Shuffle(List):
+    for i in reversed(range(1, len(List))):
+        j = rint(i)
+        List[i], List[j]= List[j],List[i]
+    return None
 
+fruits = [
+        "사과", "바나나", "체리", " 딸기", "포도", 
+        "수박", "키위", "망고", "오렌지", "파인애플"
+    ]
+for i in range(10):
+    Shuffle(fruits)
+    print(fruits)
