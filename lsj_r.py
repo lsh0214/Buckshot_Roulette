@@ -50,3 +50,6 @@ def Shuffle(List):#피셔 예이츠 셔플 방식
 # for i in range(10):
 #     Shuffle(fruits)
 #     print(fruits)
+
+def Choice(List): #랜덤 요소 반환
+    return List[rint(0,len(List)-1)]
