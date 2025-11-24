@@ -16,7 +16,7 @@ def rint(int_start,int_end=None):
     while True:
         val=0
         for i in os.urandom(os_bit):#필요한 만큼 os 노이즈 가져오기
-            val=(val * 256)+ i
+            val=(val << 8) | i
         bit_mask=val & mask 
         if bit_mask <= int_range:
             return int_start+bit_mask
