@@ -21,14 +21,6 @@ screen_width_half = screen_width/2
 
 # GameLobby
 GAME_LOBBY_IMG = pygame.image.load("game_lobby_img/GameLobby.png").convert_alpha() #주소 기입 방식 찾아봤음
-GAME_LOBBY_IMG = pygame.transform.smoothscale(GAME_LOBBY_IMG, (int(screen_width*1.2),int(screen_height*1.2)))
-LOBBY_DOOR_IMG = pygame.image.load("game_lobby_img/lobby_door.png").convert_alpha()
-
-#corridor
-CORRIDOR_lightOn_IMG = pygame.image.load("game_lobby_img/corridor_lightOn.png").convert_alpha()
-CORRIDOR_lightOn_IMG = pygame.transform.scale(CORRIDOR_lightOn_IMG, (screen_width,screen_height))
-CORRIDOR_lightOff_IMG = pygame.image.load("game_lobby_img/corridor_lightOff.png").convert_alpha()
-CORRIDOR_lightOff_IMG = pygame.transform.scale(CORRIDOR_lightOff_IMG, (screen_width,screen_height))
 
 
 
@@ -301,11 +293,15 @@ def shaking_camera():
         return (int(x*1.2), int(y*1.2))
     else:
         return (0, 0)
+    
+GAME_LOBBY_IMG_copy = pygame.transform.smoothscale(GAME_LOBBY_IMG, (int(screen_width*1.2),int(screen_height*1.2)))
+LOBBY_DOOR_IMG = pygame.image.load("game_lobby_img/lobby_door.png").convert_alpha()
 
 #게임 로비 필요한 요소들 정리
-LOBBY_DOOR_IMG = pygame.transform.smoothscale(LOBBY_DOOR_IMG, (int(0.1981944*screen_width*1.2), int(0.582778*screen_height*1.2)))
+LOBBY_DOOR_IMG = pygame.transform.smoothscale(LOBBY_DOOR_IMG, (int(0.1900944*screen_width*1.2), int(0.543678*screen_height*1.2)))
 # 버튼을 전역으로 선언하지 않고, 함수 내에서 생성
-LOBBY_DOOR_btn = Button(LOBBY_DOOR_IMG, int(0.517799*screen_width), int(0.452778*screen_height))
+LOBBY_DOOR_IMG.set_alpha(0)
+LOBBY_DOOR_btn = Button(LOBBY_DOOR_IMG, int(0.525000*screen_width), int(0.432778*screen_height))
 
 save_shake_offset = (0,0)
 # 게임 로비 블릿 함수
@@ -317,11 +313,11 @@ def gamelobby_blit(mouse_pos):
     screen_setting = (int(shake_offset[0] * 1.2), int(shake_offset[1] * 1.2))
 
     # 배경 이미지 그리기 (흔들림 적용)
-    screen.blit(GAME_LOBBY_IMG, GAME_LOBBY_IMG.get_rect(center=(screen_width_half+screen_setting[0], screen_height_half+screen_setting[1])))
+    screen.blit(GAME_LOBBY_IMG_copy, GAME_LOBBY_IMG_copy.get_rect(center=(screen_width_half+screen_setting[0], screen_height_half+screen_setting[1])))
     
     # 버튼 위치 업데이트 (흔들림 적용)
-    LOBBY_DOOR_btn.x_pos = int(0.517799 * screen_width * 1.2) + screen_setting[0]
-    LOBBY_DOOR_btn.y_pos = int(0.452778 * screen_height * 1.2) + screen_setting[1]
+    LOBBY_DOOR_btn.x_pos = int(0.525000 * screen_width * 1.2) + screen_setting[0]
+    LOBBY_DOOR_btn.y_pos = int(0.432778 * screen_height * 1.2) + screen_setting[1]
     LOBBY_DOOR_btn.btn_rect = LOBBY_DOOR_btn.image_btn.get_rect(center=(LOBBY_DOOR_btn.x_pos, LOBBY_DOOR_btn.y_pos))
     # 버튼 그리기
     LOBBY_DOOR_btn.check_for_hover(mouse_pos)
@@ -329,51 +325,252 @@ def gamelobby_blit(mouse_pos):
 
     save_shake_offset = shake_offset
 
-
 # GameLobby door clicked
 GAME_LOBBY_FEETO_IMG = pygame.image.load("game_lobby_img/gameLobby_feetO.png").convert_alpha()
-GAME_LOBBY_FEETO_IMG = pygame.transform.scale(GAME_LOBBY_FEETO_IMG, (screen_width,screen_height))
+# GAME_LOBBY_FEETO_IMG = pygame.transform.scale(GAME_LOBBY_FEETO_IMG, (screen_width,screen_height))
 
 GAME_LOBBY_FEETX_IMG = pygame.image.load("game_lobby_img/gameLobby_feetx.png").convert_alpha()
-GAME_LOBBY_FEETX_IMG = pygame.transform.scale(GAME_LOBBY_FEETX_IMG, (screen_width,screen_height))
+# GAME_LOBBY_FEETX_IMG = pygame.transform.scale(GAME_LOBBY_FEETX_IMG, (screen_width,screen_height))
 
 GAME_LOBBY_OPENDOOR_IMG = pygame.image.load("game_lobby_img/gameLobby_open_door.png").convert_alpha()
-GAME_LOBBY_OPENDOOR_IMG = pygame.transform.scale(GAME_LOBBY_OPENDOOR_IMG, (screen_width,screen_height))
+# GAME_LOBBY_OPENDOOR_IMG = pygame.transform.scale(GAME_LOBBY_OPENDOOR_IMG, (screen_width,screen_height))
 
 GAME_LOBBY_OPENDOOR_VIEW_IMG = pygame.image.load("game_lobby_img/corridor_gameLobby_view.png").convert_alpha()
-GAME_LOBBY_OPENDOOR_VIEW_IMG = pygame.transform.scale(GAME_LOBBY_OPENDOOR_VIEW_IMG, (screen_width,screen_height))
+# GAME_LOBBY_OPENDOOR_VIEW_IMG = pygame.transform.scale(GAME_LOBBY_OPENDOOR_VIEW_IMG, (screen_width,screen_height))
 
-#걸어가는 화면 함수
-def Walk(num):
-    global screen, state, GAME_LOBBY_IMG
-    trash_img = GAME_LOBBY_IMG.copy()
-    for i in range(1, save_shake_offset[0] + 5):
-        for j in range(1, save_shake_offset[1] + 1):
-            screen.fill(BLACK)
-            screen.blit(trash_img, trash_img.get_rect(center=(screen_width_half - i, screen_height_half - j)))
-            pygame.display.update()
-            pygame.time.delay(100)
+# --- 변수 선언부에 추가 ---
+walk_scale = 1.2
+walk_tick = 0.0
+walk_drift_x = 0.0    # <--- 추가: 화면의 가로 이동 거리를 저장할 변수
+kick_timer = 0
+walk_angle = 0.0
+IS_WALKING = False
+seq_angle = 0
+# --- 기존 변수들 아래에 추가 ---
+corridor_scale = 1.0
+corridor_tick = 0.0
+corridor_walk_speed = 0.05  # 복도에서 걸어가는 속도
+
+def lobby_walk():
+    global screen, state, walk_scale, walk_tick, walk_drift_x, walk_angle, kick_timer, IS_WALKING, seq_angle
+    global GAME_LOBBY_IMG, GAME_LOBBY_FEETX_IMG, GAME_LOBBY_FEETO_IMG, GAME_LOBBY_OPENDOOR_IMG, GAME_LOBBY_OPENDOOR_VIEW_IMG
+
+    # --- [설정값 분리] ---
+
+    # 1. 걷기 모드 설정
+    WALK_BOB_SPEED = 0.8        # 걷는 박자
+    ZOOM_SPEED = 0.07           # 줌인 속도
+    MOVE_SPEED_X = -35          # 옆으로 이동
+    ROTATION_SPEED = 0.02       # 회전
+
+    # --- [단계 1] 걷기 모드 (로비 줌인) ---
+    if walk_scale <= 2.5:
+        # 타이머 업데이트
+        walk_tick += WALK_BOB_SPEED
+        # 값 업데이트
+        walk_scale += ZOOM_SPEED
+        walk_drift_x += MOVE_SPEED_X
+        walk_angle -= ROTATION_SPEED
+        # 걷기용 흔들림 (빠름)
+        walk_offset_y = math.sin(walk_tick) * 40
+        walk_sway_x = math.cos(walk_tick / 2) * 20
+        # 이미지 처리
+        current_width = int(screen_width * walk_scale)
+        current_height = int(screen_height * walk_scale)
+        scaled_img = pygame.transform.scale(GAME_LOBBY_IMG, (current_width, current_height))
+        rotated_img = pygame.transform.rotate(scaled_img, walk_angle)
+        img_rect = rotated_img.get_rect()
+        img_rect.center = (screen_width_half + walk_drift_x + walk_sway_x, screen_height_half + walk_offset_y)
+        screen.blit(rotated_img, img_rect)
+    # --- [단계 2] 발차기 시퀀스 ---
+    else:
+        kick_timer += 1
+        # 시퀀스 공통 설정
+        seq_scale = 1.2
+        seq_width = int(screen_width * seq_scale)
+        seq_height = int(screen_height * seq_scale)
+        current_img = None
+        # 각 단계별 로직 (여기서 duration과 progress를 개별적으로 다시 계산합니다)
+        # [0단계: 대기]
+        if kick_timer < 25:
+            current_img = GAME_LOBBY_FEETX_IMG
+            DURATION = 25
+            progress = kick_timer / DURATION
+            # 대기 중 살짝 꿀렁
+            seq_offset_y = math.sin(progress * 2 * math.pi) * 30
+            seq_sway_x = math.cos(progress * 2 * math.pi) * 2
+        # [1단계: 쾅!] -> 여기가 수정된 부분입니다.
+        elif kick_timer < 55: # 25 + 20프레임
+            current_img = GAME_LOBBY_FEETO_IMG
+            DURATION = 30
+            # 현재 단계에서의 진행률 (0.0 ~ 1.0) 다시 계산
+            local_timer = kick_timer - 25
+            progress = local_timer / DURATION
+            # **[수정됨]** 80 -> -80
+            # sin그래프가 양수(아래)로 먼저 가는 걸 음수(위)로 뒤집습니다.
+            # 결과: 위로 솟구쳤다가(준비) -> 아래로 쾅(타격)
+            seq_offset_y = math.sin(progress * 2 * math.pi) * -100
+            seq_sway_x = math.cos(progress * 2 * math.pi) * 5
+        # [2단계: 문 열림]
+        elif kick_timer < 85: # 45 + 20프레임
+            current_img = GAME_LOBBY_OPENDOOR_IMG
+            DURATION = 30
+            local_timer = kick_timer - 45
+            progress = local_timer / DURATION
+
+            # 문 열릴 때 반동으로 다시 위로 살짝 듬
+            seq_offset_y = math.sin(progress * 2 * math.pi) * 100
+            seq_sway_x = 0
+        # [3단계: 복도 뷰]
+        elif kick_timer < 145: # 65 + 60프레임 (여유롭게)
+            current_img = GAME_LOBBY_OPENDOOR_VIEW_IMG
+            DURATION = 60
+            local_timer = kick_timer - 65
+            progress = local_timer / DURATION
+            # 기본 꿀렁임
+            seq_offset_y = math.sin(progress * 2 * math.pi) * 30
+            seq_sway_x = math.cos(progress * 2 * math.pi) * 5
+            # [시선 이동 로직]
+            # 오른쪽 보기 (이미지 왼쪽 이동)
+            look_right_amount = progress
+            seq_sway_x -= look_right_amount
+        # [4단계: 시선 이동] (새로 추가됨!)
+        # for문 대신 이 블록이 실행되면서 부드럽게 돌아갑니다.
+        elif kick_timer < 205: # 145 + 60프레임 (약 1초 동안 고개 돌리기)
+            screen.blit(CORRIDOR_lightOff_IMG, CORRIDOR_lightOff_IMG.get_rect(center=(screen_width_half, screen_height_half)))
+            current_img = GAME_LOBBY_OPENDOOR_VIEW_IMG
+            DURATION = 60
+            local_timer = kick_timer - 145
+            progress = local_timer / DURATION # 0.0 ~ 1.0
+            
+            # 기본 꿀렁임 유지
+            seq_offset_y = math.sin(progress * 2 * math.pi) * 30
+            
+            # [시선 이동 로직]
+            # progress(0~1)에 따라 0에서 400까지 이동
+            # Ease Out 효과 (처음엔 빠르고 끝에 천천히) 적용하려면: math.sin(progress * math.pi / 2)
+            look_right_amount = progress * 600 
+            
+            # 이미지를 왼쪽(-)으로 밀어야 시선이 오른쪽으로 감
+            seq_sway_x = -look_right_amount
+        else:
+            state = 'corridor'
+            IS_WALKING = False
+            
+            # 복도 애니메이션 초기화 (중요)
+            global corridor_scale, corridor_tick
+            corridor_scale = 1.0 
+            corridor_tick = 0.0
+            
+            # 이전 상태 변수 초기화
+            walk_scale = 1.2
+            walk_tick = 0.0
+            walk_drift_x = 0.0
+            walk_angle = 0.0
+            kick_timer = 0
+            return
+        if current_img:
+            scaled_seq_img = pygame.transform.scale(current_img, (seq_width, seq_height))
+            seq_rect = scaled_seq_img.get_rect()
+            # 위치 적용
+            seq_rect.center = (screen_width_half + seq_sway_x, screen_height_half + seq_offset_y)
     
-    for i in range(1, num + 1):
-        screen.fill(BLACK)
-        scaled_img = pygame.transform.smoothscale(
-            trash_img,
-            (int(screen_width * 1.2) + i * 20, int(screen_height * 1.2) + i * 20)
-        )
-        screen.blit(scaled_img, scaled_img.get_rect(center=(screen_width_half, screen_height_half)))
-        pygame.display.update()
-        pygame.time.delay(100)
-    state= 'corridor'
+            screen.blit(scaled_seq_img, seq_rect)
+
+#corridor
+CORRIDOR_lightOn_IMG = pygame.image.load("game_lobby_img/corridor_lightOn.png").convert_alpha()
+CORRIDOR_lightOn_IMG = pygame.transform.scale(CORRIDOR_lightOn_IMG, (screen_width,screen_height))
+CORRIDOR_lightOff_IMG = pygame.image.load("game_lobby_img/corridor_lightOff.png").convert_alpha()
+CORRIDOR_lightOff_IMG = pygame.transform.scale(CORRIDOR_lightOff_IMG, (screen_width,screen_height))
+
+#게임 로비 필요한 요소들 정리
+CORRIDOR_DOOR_IMG = pygame.image.load("game_lobby_img/corridor_door.png").convert_alpha()
+CORRIDOR_DOOR_IMG = pygame.transform.smoothscale(CORRIDOR_DOOR_IMG, (int(0.1430556*screen_width),int(0.2572222*screen_height)))
+# 버튼을 전역으로 선언하지 않고, 함수 내에서 생성
+CORRIDOR_DOOR_IMG.set_alpha(0)
+CORRIDOR_DOOR_btn = Button(CORRIDOR_DOOR_IMG, int(0.1*screen_width), int(0.4675*screen_height))
+
+FLICKER_SPEED = 10
+
+# 복도 블릿 함수 (수정됨)
+def corridor_blit(mouse_pos):
+    global state, screen, corridor_scale, corridor_tick, CORRIDOR_lightOn_IMG
+
+    corridor_tick += 0.1  # 걸음 속도 (박자)
+
+    # # 2. Head Bobbing (걸을 때 위아래 흔들림 + 좌우 살짝)
+    # # 영상처럼 묵직하게 걷는 느낌을 위해 sin 파형 사용
+    # offset_y = math.sin(corridor_tick) * 15  
+    # offset_x = math.cos(corridor_tick / 2) * 10 
+
+    # # 3. 이미지 변환 (확대 및 중심점 이동)
+    # # 이미지가 계속 커지므로 smoothscale을 사용하여 깨짐 방지 (성능 이슈 있으면 scale로 변경)
+    # current_width = int(screen_width * corridor_scale)
+    # current_height = int(screen_height * corridor_scale)
+    
+    # # 너무 커지면(많이 걸어가면) 멈추거나 다음 씬으로 넘김 (예: 2배 확대 시)
+    # if corridor_scale > 1.0:
+    #     corridor_scale = 1.0 # 일단 멈춤 (추후 게임 시작 로직 연결)
+    # 깜빡임 로직 (Sine Wave)
+    flicker_value = math.sin(corridor_tick)
+    
+    # 깜빡임에 따라 이미지 선택
+    if flicker_value > 0:
+        target_img = CORRIDOR_lightOn_IMG
+    else:
+        target_img = CORRIDOR_lightOff_IMG
+
+    screen.blit(target_img, target_img.get_rect(center = (screen_width_half, screen_height_half)))
+
+    CORRIDOR_DOOR_btn.btn_rect = CORRIDOR_DOOR_btn.image_btn.get_rect(center=(CORRIDOR_DOOR_btn.x_pos, CORRIDOR_DOOR_btn.y_pos))
+    # 버튼 그리기
+    CORRIDOR_DOOR_btn.check_for_hover(mouse_pos)
+    CORRIDOR_DOOR_btn.update(screen) 
+
+def corridor_walk():
+    global state, screen, corridor_scale, corridor_tick, CORRIDOR_lightOn_IMG, CORRIDOR_lightOff_IMG
+    
+    # 걷는 속도 (빠르게)
+    WALK_SPEED = 0.2
+    
+    # 값 증가 (앞으로 전진)
+    corridor_tick += WALK_SPEED
+    corridor_scale += 0.01 # 줌인 속도
+    
+    # Head Bobbing (걸을 때 흔들림)
+    head_bob_value = math.sin(corridor_tick)
+    offset_y = head_bob_value * 20  
+    offset_x = math.cos(corridor_tick / 2) * 15
+    
+    # 걸을 때도 깜빡임 유지 (더 빠르게 깜빡임)
+    if head_bob_value > 0:
+        target_img = CORRIDOR_lightOn_IMG
+    else:
+        target_img = CORRIDOR_lightOff_IMG
+    if corridor_scale > 2.0:
+        corridor_scale = 2.0 # 일단 멈춤 (추후 게임 시작 로직 연결)
+        
+    # 이미지 변환 (줌인 + 흔들림)
+    current_width = int(screen_width * corridor_scale)
+    current_height = int(screen_height * corridor_scale)
+    
+    # 스케일링 (부드럽게 or 빠르게 선택)
+    # scaled_img = pygame.transform.smoothscale(target_img, (current_width, current_height)) # 렉 걸리면 아래 것 사용
+    scaled_img = pygame.transform.scale(target_img, (current_width, current_height))
+    
+    img_rect = scaled_img.get_rect()
+    img_rect.center = (screen_width_half + offset_x, screen_height_half + offset_y)
+    
+    screen.blit(scaled_img, img_rect)
+    
+    # [종료 조건] 충분히 확대되면(문 앞까지 갔으면) 다음 씬으로 전환
+    if corridor_scale > 3.0: # 3배 확대되면 종료
+        print("게임 시작! (딜러와 마주봄)")
+        # 여기에 다음 스테이지 로직 추가 (예: state = 'game_start')
+        # transition.start_fade_out('game_start') 같은 것
+        return
 
 
-# # 복도로 가는 장면 함수
-# def lobby_to_corridor():
-#     Walk(3)
-
-# 복도 블릿 함수
-def corridor_blit():
-    global state, screen
-    screen.blit(CORRIDOR_lightOff_IMG,(0,0))
 
 # --- 메인 게임 루프 ---
 def main():
@@ -403,6 +600,7 @@ def main():
                         print("멀티 버튼 눌림")
                     elif option_btn.check_for_input(mouse_pos):
                         print("옵션 버튼 눌림")
+                    
                     elif credit_btn.check_for_input(mouse_pos):
                         print("크레딧 버튼 눌림")
                         fade_out()
@@ -417,9 +615,19 @@ def main():
             
                 elif state == 'lobby' and LOBBY_DOOR_btn.check_for_input(mouse_pos):
                     shaking_bool = False
-                    LOBBY_DOOR_IMG.set_alpha(0)
-                    GAME_LOBBY_IMG.set_alpha(0)
-                    Walk(3)
+                    mouse_cursor_arrow()
+                    state = 'lobby_walk'  # 새로운 상태 정의
+                    IS_WALKING = True
+                    walk_scale = 1.2
+                    walk_tick = 0.0
+                    walk_drift_x = 0.0
+                    kick_timer = 0
+                    walk_angle = 0.0
+                elif state == 'corridor' and CORRIDOR_DOOR_btn.check_for_input(mouse_pos):
+                    mouse_cursor_arrow()
+                    state = 'corridor_walk'
+                    corridor_scale = 1.0
+                    corridor_tick = 0.0
         screen.fill(BLACK)
         if state == 'menu':
             menu_blit(mouse_pos)
@@ -428,7 +636,11 @@ def main():
         elif state == 'lobby':
             gamelobby_blit(mouse_pos)
         elif state == 'corridor':
-            corridor_blit()
+            corridor_blit(mouse_pos)
+        elif state == 'lobby_walk':
+            lobby_walk()
+        elif state == 'corridor_walk':
+            corridor_walk()
         pygame.display.update()
         TIME.tick(60)
 
