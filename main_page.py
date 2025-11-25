@@ -397,8 +397,10 @@ def lobby_walk():
             DURATION = 25
             progress = kick_timer / DURATION
             # 대기 중 살짝 꿀렁
-            seq_offset_y = math.sin(progress * 2 * math.pi) * 30
-            seq_sway_x = math.cos(progress * 2 * math.pi) * 2
+            # seq_offset_y = math.sin(progress * 2 * math.pi) * 30
+            # seq_sway_x = math.cos(progress * 2 * math.pi) * 2
+            seq_offset_y = 0
+            seq_sway_x = 0
         # [1단계: 쾅!] -> 여기가 수정된 부분입니다.
         elif kick_timer < 55: # 25 + 20프레임
             current_img = GAME_LOBBY_FEETO_IMG
@@ -444,7 +446,7 @@ def lobby_walk():
             progress = local_timer / DURATION # 0.0 ~ 1.0
             
             # 기본 꿀렁임 유지
-            seq_offset_y = math.sin(progress * 2 * math.pi) * 30
+            seq_offset_y = 0
             
             # [시선 이동 로직]
             # progress(0~1)에 따라 0에서 400까지 이동
@@ -495,27 +497,11 @@ FLICKER_SPEED = 10
 # 복도 블릿 함수 (수정됨)
 def corridor_blit(mouse_pos):
     global state, screen, corridor_scale, corridor_tick, CORRIDOR_lightOn_IMG
-
     corridor_tick += 0.1  # 걸음 속도 (박자)
-
-    # # 2. Head Bobbing (걸을 때 위아래 흔들림 + 좌우 살짝)
-    # # 영상처럼 묵직하게 걷는 느낌을 위해 sin 파형 사용
-    # offset_y = math.sin(corridor_tick) * 15  
-    # offset_x = math.cos(corridor_tick / 2) * 10 
-
-    # # 3. 이미지 변환 (확대 및 중심점 이동)
-    # # 이미지가 계속 커지므로 smoothscale을 사용하여 깨짐 방지 (성능 이슈 있으면 scale로 변경)
-    # current_width = int(screen_width * corridor_scale)
-    # current_height = int(screen_height * corridor_scale)
-    
-    # # 너무 커지면(많이 걸어가면) 멈추거나 다음 씬으로 넘김 (예: 2배 확대 시)
-    # if corridor_scale > 1.0:
-    #     corridor_scale = 1.0 # 일단 멈춤 (추후 게임 시작 로직 연결)
-    # 깜빡임 로직 (Sine Wave)
     flicker_value = math.sin(corridor_tick)
     
     # 깜빡임에 따라 이미지 선택
-    if flicker_value > 0:
+    if flicker_value > 0.5 or flicker_value<0 and flicker_value>-0.5:
         target_img = CORRIDOR_lightOn_IMG
     else:
         target_img = CORRIDOR_lightOff_IMG
@@ -527,54 +513,94 @@ def corridor_blit(mouse_pos):
     CORRIDOR_DOOR_btn.check_for_hover(mouse_pos)
     CORRIDOR_DOOR_btn.update(screen) 
 
-def corridor_walk():
+    return flicker_value
+
+SEE_GAMEROOM_DOOR_IMG = pygame.image.load("game_lobby_img/see_gameRoom_door.png").convert_alpha()
+# SEE_GAMEROOM_DOOR_IMG = pygame.transform.scale(CORRIDOR_lightOn_IMG, (screen_width,screen_height))
+
+def corridor_walk(flicker_value):
     global state, screen, corridor_scale, corridor_tick, CORRIDOR_lightOn_IMG, CORRIDOR_lightOff_IMG
-    
-    # 걷는 속도 (빠르게)
-    WALK_SPEED = 0.2
-    
-    # 값 증가 (앞으로 전진)
-    corridor_tick += WALK_SPEED
-    corridor_scale += 0.01 # 줌인 속도
-    
-    # Head Bobbing (걸을 때 흔들림)
-    head_bob_value = math.sin(corridor_tick)
-    offset_y = head_bob_value * 20  
-    offset_x = math.cos(corridor_tick / 2) * 15
-    
-    # 걸을 때도 깜빡임 유지 (더 빠르게 깜빡임)
-    if head_bob_value > 0:
-        target_img = CORRIDOR_lightOn_IMG
-    else:
-        target_img = CORRIDOR_lightOff_IMG
-    if corridor_scale > 2.0:
-        corridor_scale = 2.0 # 일단 멈춤 (추후 게임 시작 로직 연결)
+    global WALK_BOB_SPEED, ZOOM_SPEED, MOVE_SPEED_X, ROTATION_SPEED, walk_angle, walk_drift_x, walk_tick, walk_scale
+    corridor_tick += 0.1
+    if corridor_tick <= 5.0:
+        if flicker_value > 0.5 or flicker_value<0 and flicker_value>-0.5:
+            current_img = CORRIDOR_lightOn_IMG
+        else:
+            current_img = CORRIDOR_lightOff_IMG
         
-    # 이미지 변환 (줌인 + 흔들림)
-    current_width = int(screen_width * corridor_scale)
-    current_height = int(screen_height * corridor_scale)
+        current_img = pygame.transform.scale(current_img, (screen_width, screen_height))
+        current_img_x_pos = screen_width_half + corridor_tick*150
+
+        screen.blit(current_img, current_img.get_rect(center = (current_img_x_pos, screen_height_half)))
+    else:
+        # 1. 걷기 모드 설정
+        WALK_BOB_SPEED = 0.8        # 걷는 박자
+        ZOOM_SPEED = 0.07           # 줌인 속도
+        MOVE_SPEED_X = -35          # 옆으로 이동
+        ROTATION_SPEED = 0.02       # 회전'
+        walk_scale = 0.0
+
+        tick = 0.0
+
+        # --- [단계 1] 걷기 모드 (로비 줌인) ---
+        if walk_scale <= 2.5:
+            # 타이머 업데이트
+            walk_tick += WALK_BOB_SPEED
+            # 값 업데이트
+            walk_scale += ZOOM_SPEED
+            walk_drift_x += MOVE_SPEED_X
+            walk_angle -= ROTATION_SPEED
+            # 걷기용 흔들림 (빠름)
+            walk_offset_y = math.sin(walk_tick) * 40
+            walk_sway_x = math.cos(walk_tick / 2) * 20
+            # 이미지 처리
+            seeGameroomDoor_width = int(screen_width * walk_scale)
+            seeGameroomDoor_height = int(screen_height * walk_scale)
+            scaled_img = pygame.transform.scale(SEE_GAMEROOM_DOOR_IMG, (seeGameroomDoor_width, seeGameroomDoor_height))
+            
+            img_rect = scaled_img.get_rect()
+            img_rect.center = (screen_width_half + walk_drift_x + walk_sway_x, screen_height_half + walk_offset_y)
+            screen.blit(scaled_img, img_rect)
+        else:
+            tick += 0.1
+            if tick <= 15:
+                state = 'menu'
+                return
+        # WALK_SPEED = 0.4
     
-    # 스케일링 (부드럽게 or 빠르게 선택)
-    # scaled_img = pygame.transform.smoothscale(target_img, (current_width, current_height)) # 렉 걸리면 아래 것 사용
-    scaled_img = pygame.transform.scale(target_img, (current_width, current_height))
-    
-    img_rect = scaled_img.get_rect()
-    img_rect.center = (screen_width_half + offset_x, screen_height_half + offset_y)
-    
-    screen.blit(scaled_img, img_rect)
+        # # 값 증가 (앞으로 전진)
+        # corridor_tick += WALK_SPEED
+        # corridor_scale += 0.06 # 줌인 속도
+        
+        # # Head Bobbing (걸을 때 흔들림)
+        # head_bob_value = math.sin(corridor_tick)
+        # offset_y = head_bob_value * 20  
+        # offset_x = math.cos(corridor_tick / 2) * 15
+            
+        # # 이미지 변환 (줌인 + 흔들림)
+        # current_width = int(screen_width * corridor_scale)
+        # current_height = int(screen_height * corridor_scale)
+        
+        # # 스케일링 (부드럽게 or 빠르게 선택)
+        # # scaled_img = pygame.transform.smoothscale(target_img, (current_width, current_height)) # 렉 걸리면 아래 것 사용
+        # scaled_img = pygame.transform.scale(SEE_GAMEROOM_DOOR_IMG, (current_width, current_height))
+        
+        # img_rect = scaled_img.get_rect()
+        # img_rect.center = (screen_width_half + offset_x, screen_height_half + offset_y)
+        
+        # screen.blit(scaled_img, img_rect)
     
     # [종료 조건] 충분히 확대되면(문 앞까지 갔으면) 다음 씬으로 전환
     if corridor_scale > 3.0: # 3배 확대되면 종료
-        print("게임 시작! (딜러와 마주봄)")
-        # 여기에 다음 스테이지 로직 추가 (예: state = 'game_start')
-        # transition.start_fade_out('game_start') 같은 것
+        
         return
 
 
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos, shaking_bool, shake_angle, check_num
+    global state, credits_elements_y_pos, shaking_bool, shake_angle, check_num, corridor_tick, corridor_scale
+    global walk_angle, kick_timer, walk_drift_x, walk_tick, walk_scale
 
     running = True
     while running:
@@ -636,11 +662,11 @@ def main():
         elif state == 'lobby':
             gamelobby_blit(mouse_pos)
         elif state == 'corridor':
-            corridor_blit(mouse_pos)
+            flicker_value = corridor_blit(mouse_pos)
         elif state == 'lobby_walk':
             lobby_walk()
         elif state == 'corridor_walk':
-            corridor_walk()
+            corridor_walk(flicker_value)
         pygame.display.update()
         TIME.tick(60)
 
