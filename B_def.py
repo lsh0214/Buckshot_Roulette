@@ -33,6 +33,13 @@ def start_inven():
             inven_r_list.remove(i)
     return lsj_r.Choice(inven_r_list)
 
+def inven_in(item,inven_index,ad):
+    if ad == 0:
+        inven[inven_index]=item
+    if ad == 1:
+        ai_inven[inven_index]=item
+
+    
 def Shotgun(Shotgun_Bool): #각각 실탄일시 hp다운 시스템 및 총알은 index -1빠지도록
     global hp,ai_hp,Shotgun_hp
     if Shotgun_Bool==0:
