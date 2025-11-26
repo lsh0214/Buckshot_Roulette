@@ -58,10 +58,6 @@ def ai_use_item():
 
     
 
-deal_items(3)
-
-ai_use_item()
-
 
 
 
@@ -71,5 +67,6 @@ ai_use_item()
 
 
     
+
 
 
