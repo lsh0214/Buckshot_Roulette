@@ -21,7 +21,7 @@ screen_width_half = screen_width/2
 
 # GameLobby
 # [최적화 1] 배경 이미지는 투명도가 필요 없으므로 convert()를 사용하여 렌더링 속도 향상
-GAME_LOBBY_IMG = pygame.image.load("game_lobby_img/GameLobby.png").convert() 
+GAME_LOBBY_IMG = pygame.image.load("game_lobby_imgs/GameLobby.png").convert() 
 
 
 
@@ -29,15 +29,15 @@ WHITE = (192, 192, 192)
 L_BLACK = (95,95,95)
 BLACK = (0,0,0)
 FONT = "Fake Receipt.otf"
-LOGO = pygame.image.load('menu_img/Buckshot_logo.png').convert_alpha()
+LOGO = pygame.image.load('menu_imgs/Buckshot_logo.png').convert_alpha()
 LOGO = pygame.transform.scale(LOGO, (950,750))
-KANGNAM_LOGO = pygame.image.load('menu_img/KangnamUniversity.png').convert_alpha()
+KANGNAM_LOGO = pygame.image.load('menu_imgs/KangnamUniversity.png').convert_alpha()
 KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (200,200))
-MENU_BULLET_IMG_1 = pygame.image.load('menu_img/menu_bullet_img1.png').convert_alpha()
-MENU_BULLET_IMG_2 = pygame.image.load('menu_img/menu_bullet_img2.png').convert_alpha()
+MENU_BULLET_IMG_1 = pygame.image.load('menu_imgs/menu_bullet_img1.png').convert_alpha()
+MENU_BULLET_IMG_2 = pygame.image.load('menu_imgs/menu_bullet_img2.png').convert_alpha()
 MENU_SCROLL_SPEED = 5
 TIME = pygame.time.Clock()
-OUR_LOGO = pygame.image.load('credit_img/our_logo.png').convert_alpha()
+OUR_LOGO = pygame.image.load('credit_imgs/our_logo.png').convert_alpha()
 OUR_LOGO = pygame.transform.scale(OUR_LOGO, (1000,800))
 CREDIT_SCROLL_SPEED = 3
 
@@ -276,7 +276,7 @@ def shaking_camera():
         return (0, 0)
     
 GAME_LOBBY_IMG_copy = pygame.transform.smoothscale(GAME_LOBBY_IMG, (int(screen_width*1.2),int(screen_height*1.2)))
-LOBBY_DOOR_IMG = pygame.image.load("game_lobby_img/lobby_door.png").convert_alpha()
+LOBBY_DOOR_IMG = pygame.image.load("game_lobby_imgs/lobby_door.png").convert_alpha()
 
 #게임 로비 필요한 요소들 정리
 LOBBY_DOOR_IMG = pygame.transform.smoothscale(LOBBY_DOOR_IMG, (int(0.1900944*screen_width*1.2), int(0.543678*screen_height*1.2)))
@@ -307,10 +307,10 @@ def gamelobby_blit(mouse_pos):
     save_shake_offset = shake_offset
 
 # GameLobby door clicked
-GAME_LOBBY_FEETO_IMG = pygame.image.load("game_lobby_img/gameLobby_feetO.png").convert_alpha()
-GAME_LOBBY_FEETX_IMG = pygame.image.load("game_lobby_img/gameLobby_feetx.png").convert_alpha()
-GAME_LOBBY_OPENDOOR_IMG = pygame.image.load("game_lobby_img/gameLobby_open_door.png").convert_alpha()
-GAME_LOBBY_OPENDOOR_VIEW_IMG = pygame.image.load("game_lobby_img/corridor_gameLobby_view.png").convert_alpha()
+GAME_LOBBY_FEETO_IMG = pygame.image.load("game_lobby_imgs/gameLobby_feetO.png").convert_alpha()
+GAME_LOBBY_FEETX_IMG = pygame.image.load("game_lobby_imgs/gameLobby_feetx.png").convert_alpha()
+GAME_LOBBY_OPENDOOR_IMG = pygame.image.load("game_lobby_imgs/gameLobby_open_door.png").convert_alpha()
+GAME_LOBBY_OPENDOOR_VIEW_IMG = pygame.image.load("game_lobby_imgs/corridor_gameLobby_view.png").convert_alpha()
 
 # --- 변수 선언부에 추가 ---
 walk_scale = 1.2
@@ -410,7 +410,7 @@ def lobby_walk():
             seq_offset_y = math.sin(progress * 2 * math.pi) * -100
             seq_sway_x = math.cos(progress * 2 * math.pi) * 5
         # [2단계: 문 열림]
-        elif kick_timer < 10: # 45 + 20프레임
+        elif kick_timer < 15: # 45 + 20프레임
             current_img = GAME_LOBBY_OPENDOOR_IMG
             DURATION = 15
             local_timer = kick_timer - 45
@@ -420,7 +420,7 @@ def lobby_walk():
             seq_offset_y = math.sin(progress * 2 * math.pi) * 100
             seq_sway_x = 0
         # [3단계: 복도 뷰]
-        elif kick_timer < 25: # 65 + 60프레임 (여유롭게)
+        elif kick_timer < 30: # 65 + 60프레임 (여유롭게)
             current_img = GAME_LOBBY_OPENDOOR_VIEW_IMG
             DURATION = 30
             local_timer = kick_timer - 50
@@ -455,22 +455,22 @@ def lobby_walk():
             screen.blit(scaled_seq_img, seq_rect)
 
 #corridor
-CORRIDOR_lightOn_IMG = pygame.image.load("game_lobby_img/corridor_lightOn.png").convert_alpha()
+CORRIDOR_lightOn_IMG = pygame.image.load("game_lobby_imgs/corridor_lightOn.png").convert_alpha()
 CORRIDOR_lightOn_IMG = pygame.transform.scale(CORRIDOR_lightOn_IMG, (screen_width,screen_height))
-CORRIDOR_lightOff_IMG = pygame.image.load("game_lobby_img/corridor_lightOff.png").convert_alpha()
+CORRIDOR_lightOff_IMG = pygame.image.load("game_lobby_imgs/corridor_lightOff.png").convert_alpha()
 CORRIDOR_lightOff_IMG = pygame.transform.scale(CORRIDOR_lightOff_IMG, (screen_width,screen_height))
 
 #게임 로비 필요한 요소들 정리
-CORRIDOR_DOOR_IMG = pygame.image.load("game_lobby_img/corridor_door.png").convert_alpha()
+CORRIDOR_DOOR_IMG = pygame.image.load("game_lobby_imgs/corridor_door.png").convert_alpha()
 CORRIDOR_DOOR_IMG = pygame.transform.smoothscale(CORRIDOR_DOOR_IMG, (int(0.1430556*screen_width),int(0.2572222*screen_height)))
 # 버튼을 전역으로 선언하지 않고, 함수 내에서 생성
 CORRIDOR_DOOR_IMG.set_alpha(0)
 CORRIDOR_DOOR_btn = Button(CORRIDOR_DOOR_IMG, int(0.1*screen_width), int(0.4675*screen_height))
 
-SEE_GAMEROOM_DOOR_IMG = pygame.image.load("game_lobby_img/see_gameRoom_door.png").convert_alpha()
+SEE_GAMEROOM_DOOR_IMG = pygame.image.load("game_lobby_imgs/see_gameRoom_door.png").convert_alpha()
 SEE_GAMEROOM_DOOR_IMG = pygame.transform.scale(SEE_GAMEROOM_DOOR_IMG, (screen_width,screen_height))
 
-ADD_CORRIDOR_IMG = pygame.image.load("game_lobby_img/add_corridor_img.png").convert_alpha()
+ADD_CORRIDOR_IMG = pygame.image.load("game_lobby_imgs/add_corridor_img.png").convert_alpha()
 ADD_CORRIDOR_IMG = pygame.transform.scale(ADD_CORRIDOR_IMG, (screen_width,screen_height))
 
 
@@ -502,10 +502,10 @@ def corridor_blit(mouse_pos):
 
     return flicker_value
 
-GAMEROOM_FEETO_IMG = pygame.image.load("game_lobby_img/gameroom_feetO.png").convert_alpha()
-GAMEROOM_FEETX_IMG = pygame.image.load("game_lobby_img/gameroom_feetX.png").convert_alpha()
-GAMEROOM_DOOR_OPEN_IMG = pygame.image.load("game_lobby_img/gameroom_door_open.png").convert_alpha()
-GAMEROOM_VIEW_IMG = pygame.image.load("game_lobby_img/gameroom_view.png").convert_alpha()
+GAMEROOM_FEETO_IMG = pygame.image.load("game_lobby_imgs/gameroom_feetO.png").convert_alpha()
+GAMEROOM_FEETX_IMG = pygame.image.load("game_lobby_imgs/gameroom_feetX.png").convert_alpha()
+GAMEROOM_DOOR_OPEN_IMG = pygame.image.load("game_lobby_imgs/gameroom_door_open.png").convert_alpha()
+GAMEROOM_VIEW_IMG = pygame.image.load("game_lobby_imgs/gameroom_view.png").convert_alpha()
 
 def corridor_walk(flicker_value):
     global state, screen, corridor_scale, corridor_tick, CORRIDOR_lightOn_IMG, CORRIDOR_lightOff_IMG, kick_timer
@@ -532,7 +532,7 @@ def corridor_walk(flicker_value):
         corridor_scale += ZOOM_SPEED
         
         # Head Bobbing (걸을 때 흔들림)
-        offset_y = math.sin(corridor_tick) * 60
+        offset_y = math.sin(corridor_tick) * 80
         offset_x = math.cos(corridor_tick / 2) * 30
             
         # [핵심 최적화: Crop & Scale]
@@ -589,15 +589,15 @@ def corridor_walk(flicker_value):
         # [1단계: 쾅!]
         elif kick_timer < 20: 
             current_img = GAMEROOM_FEETO_IMG
-            DURATION = 10
+            DURATION = 15
             local_timer = kick_timer - 10
             progress = local_timer / DURATION
             seq_offset_y = math.sin(progress * 2 * math.pi) * -100
             seq_sway_x = math.cos(progress * 2 * math.pi) * 5
         # [2단계: 문 열림]
-        elif kick_timer < 30: 
+        elif kick_timer < 35: 
             current_img = GAMEROOM_DOOR_OPEN_IMG
-            DURATION = 10
+            DURATION = 15
             local_timer = kick_timer - 20
             progress = local_timer / DURATION
 
@@ -606,7 +606,7 @@ def corridor_walk(flicker_value):
         # [3단계: 복도 뷰]
         elif kick_timer < 50: 
             current_img = GAMEROOM_VIEW_IMG
-            DURATION = 20
+            DURATION = 50
             local_timer = kick_timer - 30
             progress = local_timer / DURATION
             # 기본 꿀렁임
@@ -616,7 +616,13 @@ def corridor_walk(flicker_value):
             look_right_amount = progress
             seq_sway_x -= look_right_amount
         else:
-            state = 'menu'
+            global sign_tick  # sign_tick을 제어하기 위해 global 선언 필요
+        
+            state = 'sign'    # 상태 변경
+            sign_tick = 0     # 애니메이션 타이머 초기화 (중요: 재시작 시 버그 방지)
+            
+            # 빈 화면 방지: 상태가 바뀌자마자 첫 프레임을 즉시 그립니다.
+            Sign_blit()      
             return
             
         # 이미지 그리기
@@ -627,6 +633,60 @@ def corridor_walk(flicker_value):
             seq_rect.center = (screen_width_half + seq_sway_x, screen_height_half + seq_offset_y)
     
             screen.blit(scaled_seq_img, seq_rect)
+
+#동의서 이미지 로드
+GAMEROOM_DEALER_FACE_1 = pygame.image.load("sign_imgs/gameroom_dealer_face_1.png").convert_alpha()
+# GAMEROOM_DEALER_FACE_1 = pygame.transform.scale(GAMEROOM_DEALER_FACE_1, (screen_width,screen_height))
+
+GAMEROOM_DEALER_FACE_2 = pygame.image.load("sign_imgs/gameroom_dealer_face_2.png").convert_alpha()
+# GAMEROOM_DEALER_FACE_2 = pygame.transform.scale(GAMEROOM_DEALER_FACE_2, (screen_width,screen_height))
+
+GAMEROOM_DEALER_FACE_3 = pygame.image.load("sign_imgs/gameroom_dealer_face_3.png").convert_alpha()
+# GAMEROOM_DEALER_FACE_3 = pygame.transform.scale(GAMEROOM_DEALER_FACE_3, (screen_width,screen_height))
+
+GAMEROOM_DEALER_HAND_O = pygame.image.load("sign_imgs/gameroom_dealer_handO.png").convert_alpha()
+# GAMEROOM_DEALER_HAND_O = pygame.transform.scale(GAMEROOM_DEALER_HAND_O, (screen_width,screen_height))
+
+GAMEROOM_DEALER_HAND_X = pygame.image.load("sign_imgs/gameroom_dealer_handX.png").convert_alpha()
+# GAMEROOM_DEALER_HAND_X = pygame.transform.scale(GAMEROOM_DEALER_HAND_X, (screen_width,screen_height))
+
+GAMEROOM_DEALER_HAND_CROOK = pygame.image.load("sign_imgs/gameroom_dealer_hand_crook.png").convert_alpha()
+# GAMEROOM_DEALER_HAND_CROOK = pygame.transform.scale(GAMEROOM_DEALER_HAND_CROOK, (screen_width,screen_height))
+
+GAMEROOM_DEALER_HAND_CROOK_ON_TABLE = pygame.image.load("sign_imgs/gameroom_dealer_hand_crookOntable.png").convert_alpha()
+# GAMEROOM_DEALER_HAND_CROOK_ON_TABLE = pygame.transform.scale(GAMEROOM_DEALER_HAND_CROOK_ON_TABLE, (screen_width,screen_height))
+
+WAIVER_ON_HAND = pygame.image.load("sign_imgs/waiver_onhand_img.png").convert_alpha()
+# WAIVER_ON_HAND = pygame.transform.scale(WAIVER_ON_HAND, (screen_width,screen_height))
+
+WAIVER_ON_TABLE = pygame.image.load("sign_imgs/waiver_ontable_img.png").convert_alpha()
+# WAIVER_ON_TABLE = pygame.transform.scale(WAIVER_ON_TABLE, (screen_width,screen_height))
+
+SEE_WAIVER_VIEW = pygame.image.load("sign_imgs/see_waiver_img.png").convert_alpha()
+# SEE_WAIVER_VIEW = pygame.transform.scale(SEE_WAIVER_VIEW, (screen_width,screen_height))
+
+sign_tick = 0
+img = None
+#게임 동의서 사인 블릿 함수
+def Sign_blit():
+    global state, screen, sign_tick, img
+    sign_tick += 1
+    if sign_tick <= 50:
+        img = GAMEROOM_DEALER_HAND_X
+    elif sign_tick <= 100:
+        img = GAMEROOM_DEALER_HAND_O
+    elif sign_tick <= 150:
+        img = GAMEROOM_DEALER_FACE_1
+    elif sign_tick <= 200:
+        img = GAMEROOM_DEALER_FACE_2
+    elif sign_tick <= 250:
+        img = GAMEROOM_DEALER_FACE_3
+    if img:
+        img = pygame.transform.scale(img, (screen_width, screen_height))
+        rect = img.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(img, rect)
+    return
 
 
 
@@ -642,7 +702,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if state == 'credit' or state == 'lobby' or state == 'corridor':
+                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign':
                     state = 'menu'
                     shaking_bool = True
                     shake_angle = 0
@@ -701,6 +761,8 @@ def main():
             lobby_walk()
         elif state == 'corridor_walk':
             corridor_walk(flicker_value)
+        elif state == 'sign':
+            Sign_blit()
         pygame.display.update()
         TIME.tick(60)
 
