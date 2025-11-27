@@ -256,9 +256,8 @@ shaking_bool = True
 shaking_range = 40
 # 레미니스케이트 곡선(∞ 모양)을 위한 각도
 shake_angle = 0
-shake_speed = 0.02  # 회전 속도 (작을수록 느림)
 
-def shaking_camera():
+def shaking_camera(shake_speed, width_range, height_range):
     global shake_angle
     
     if shaking_bool:
@@ -268,10 +267,10 @@ def shaking_camera():
         cos_t = math.cos(shake_angle)
         denominator = 1 + sin_t * sin_t
         
-        x = shaking_range * cos_t / denominator
-        y = shaking_range * sin_t * cos_t / denominator
+        x = shaking_range * width_range * cos_t / denominator
+        y = shaking_range * height_range * sin_t * cos_t / denominator
         
-        return (int(x*1.2), int(y*1.2))
+        return [int(x), int(y)]
     else:
         return (0, 0)
     
@@ -289,7 +288,11 @@ save_shake_offset = (0,0)
 def gamelobby_blit(mouse_pos):
     global screen, LOBBY_DOOR_btn, save_shake_offset
     # 흔들림 오프셋 가져오기 (∞ 모양)
-    shake_offset = shaking_camera()
+    shake_speed = 0.02
+    shake_offset = shaking_camera(shake_speed, 1, 1)
+    shake_offset[0] = int(shake_offset[0] *1.2)
+    shake_offset[1] = int(shake_offset[1] *1.2)
+
     
     screen_setting = (int(shake_offset[0] * 1.2), int(shake_offset[1] * 1.2))
 
@@ -507,7 +510,7 @@ GAMEROOM_FEETX_IMG = pygame.image.load("game_lobby_imgs/gameroom_feetX.png").con
 GAMEROOM_DOOR_OPEN_IMG = pygame.image.load("game_lobby_imgs/gameroom_door_open.png").convert_alpha()
 GAMEROOM_VIEW_IMG = pygame.image.load("game_lobby_imgs/gameroom_view.png").convert_alpha()
 
-def corridor_walk(flicker_value):
+def corridor_walk(flicker_value, mouse_pos):
     global state, screen, corridor_scale, corridor_tick, CORRIDOR_lightOn_IMG, CORRIDOR_lightOff_IMG, kick_timer
     
     # 1. 걷는 단계 (줌인) - Crop & Scale 최적화 적용
@@ -610,8 +613,8 @@ def corridor_walk(flicker_value):
             local_timer = kick_timer - 30
             progress = local_timer / DURATION
             # 기본 꿀렁임
-            seq_offset_y = 0
-            seq_sway_x = 0
+            seq_offset_y = math.sin(progress * 2 * math.pi) * -100
+            seq_sway_x = math.cos(progress * 2 * math.pi) * 5
             # [시선 이동 로직]
             look_right_amount = progress
             seq_sway_x -= look_right_amount
@@ -622,7 +625,7 @@ def corridor_walk(flicker_value):
             sign_tick = 0     # 애니메이션 타이머 초기화 (중요: 재시작 시 버그 방지)
             
             # 빈 화면 방지: 상태가 바뀌자마자 첫 프레임을 즉시 그립니다.
-            Sign_blit()      
+            Sign_blit(mouse_pos)      
             return
             
         # 이미지 그리기
@@ -667,28 +670,153 @@ SEE_WAIVER_VIEW = pygame.image.load("sign_imgs/see_waiver_img.png").convert_alph
 
 sign_tick = 0
 img = None
+current_tick = 0
+angle = 0
+imgs_not = [GAMEROOM_DEALER_FACE_1, GAMEROOM_DEALER_FACE_2]
+
+#게임 로비 필요한 요소들 정리
+WAIVER_ON_TABLE = pygame.transform.smoothscale(WAIVER_ON_TABLE, (int(0.13993*screen_width),int(0.18778*screen_height)))
+# 버튼을 전역으로 선언하지 않고, 함수 내에서 생성
+WAIVER_ON_TABLE.set_alpha(0)
+WAIVER_ON_TABLE_btn = Button(WAIVER_ON_TABLE, int(0.44097*screen_width), int(0.19944*screen_height))
 #게임 동의서 사인 블릿 함수
-def Sign_blit():
-    global state, screen, sign_tick, img
+def Sign_blit(mouse_pos):
+    global state, screen, sign_tick, img, angle, SEE_WAIVER_VIEW
+    seq_sway_x = 0
+    seq_offset_y = 0
     sign_tick += 1
-    if sign_tick <= 50:
-        img = GAMEROOM_DEALER_HAND_X
-    elif sign_tick <= 100:
+    
+    # --- 1. 이미지 선택 (애니메이션 프레임 변경) ---
+    # 여기서는 이미지만 교체하고, 확대 비율 계산에는 관여하지 않습니다.
+    if sign_tick <= 10:
         img = GAMEROOM_DEALER_HAND_O
-    elif sign_tick <= 150:
+        DURATION = 10
+        local_timer = sign_tick - 0
+        progress = local_timer / DURATION
+        seq_offset_y = -math.sin(progress * math.pi) * 20
+    elif sign_tick <= 20:
+        img = GAMEROOM_DEALER_HAND_CROOK
+        DURATION = 10
+        local_timer = sign_tick - 10
+        progress = local_timer / DURATION
+        seq_offset_y = -math.sin(progress * math.pi) * 15
+    elif sign_tick <= 30:
+        img = GAMEROOM_DEALER_HAND_CROOK_ON_TABLE
+        DURATION = 10
+        local_timer = sign_tick - 20
+        progress = local_timer / DURATION
+        seq_offset_y = -math.sin(progress * math.pi) * 10
+    elif sign_tick <= 40:
         img = GAMEROOM_DEALER_FACE_1
-    elif sign_tick <= 200:
+    elif sign_tick <= 50:
         img = GAMEROOM_DEALER_FACE_2
-    elif sign_tick <= 250:
+    elif sign_tick <= 200:
         img = GAMEROOM_DEALER_FACE_3
+        DURATION = 10
+        local_timer = sign_tick - 20
+        progress = local_timer / DURATION
+        seq_offset_y = -math.sin(progress * math.pi) * 10
+    elif sign_tick <= 205:
+        img = GAMEROOM_DEALER_FACE_3
+        DURATION = 5
+        local_timer = sign_tick - 20
+        progress = local_timer / DURATION
+        seq_offset_y = math.sin(progress * math.pi) * -100
+
+    
+    # --- 2. 연속적인 줌 인 (Continuous Zoom) ---
     if img:
-        img = pygame.transform.scale(img, (screen_width, screen_height))
-        rect = img.get_rect()
-        rect.center = (screen_width_half, screen_height_half)
-        screen.blit(img, rect)
+        if img in imgs_not:
+            start_scale = 1.0
+            end_scale = 1.2 
+            
+            current_scale = start_scale + (end_scale - start_scale)
+            
+            # --- 3. 렌더링 (짝수 보정 & smoothscale 유지) ---
+            target_w = int(screen_width * current_scale)
+            target_h = int(screen_height * current_scale)
+
+            scale_img = pygame.transform.smoothscale(img, (target_w, target_h))
+            rect = scale_img.get_rect()
+            rect.center = (screen_width_half + seq_sway_x, screen_height_half + seq_offset_y)
+        elif img == GAMEROOM_DEALER_FACE_3 and sign_tick > 200:
+
+            SEE_WAIVER_VIEW = pygame.transform.scale(SEE_WAIVER_VIEW, (screen_width,screen_height))
+            see_rect = SEE_WAIVER_VIEW.get_rect()
+            see_rect.center = (screen_width_half, screen_height_half)
+            
+            scale_img = pygame.transform.smoothscale(img, (screen_width, screen_height))
+            rect = scale_img.get_rect()
+            rect.center = (screen_width_half, screen_height_half + seq_offset_y)
+
+        else:
+            # 부드러운 렌더링
+            scale_img = pygame.transform.smoothscale(img, (screen_width, screen_height))
+            
+            rect = scale_img.get_rect()
+            rect.center = (screen_width_half, screen_height_half)
+        
+        screen.blit(scale_img, rect)
+
+        if img == GAMEROOM_DEALER_FACE_3:
+            if sign_tick <= 200:
+                talk_text_move("PLEASE SIGN THE WAIVER.")
+            elif sign_tick > 202:
+                screen.blit(SEE_WAIVER_VIEW, see_rect)
+                WAIVER_ON_TABLE_btn.btn_rect = WAIVER_ON_TABLE_btn.image_btn.get_rect(topleft=(WAIVER_ON_TABLE_btn.x_pos, WAIVER_ON_TABLE_btn.y_pos))
+                # 버튼 그리기
+                WAIVER_ON_TABLE_btn.check_for_hover(mouse_pos)
+                WAIVER_ON_TABLE_btn.update(screen) 
     return
 
+talk_text_index = 0
+talk_text_timer = 0
+talk_text = get_font(80)
 
+def talk_text_move(text):
+    global talk_text_index, talk_text_timer, shaking_bool
+
+    # 대사 박스 만들기
+    talk_box_w = int(screen_width * 0.5681)
+    talk_box_h = int(screen_height * 0.1300)
+    talk_box_x = int(screen_width * 0.2153)
+    talk_box_y = int(screen_height * 0.7833)
+    talk_box = pygame.Surface((talk_box_w, talk_box_h))
+    talk_box.fill((0, 0, 0))
+
+
+    # 글자 띄우기
+    full_text_sur = talk_text.render(text, True, (255, 255, 255))
+    full_rect = full_text_sur.get_rect()
+    box_center_x = talk_box_x + (talk_box_w / 2)
+    box_center_y = talk_box_y + (talk_box_h / 2)
+    full_rect.center = (box_center_x, box_center_y)
+
+    text_start_x = full_rect.x
+    text_start_y = full_rect.y
+
+    if talk_text_index < len(text):
+        talk_text_timer += 1
+        if talk_text_timer >= 5: 
+            talk_text_index += 1
+            talk_text_timer = 0
+
+    current_text = text[:talk_text_index]
+        
+    text_surface = talk_text.render(current_text, True, (255, 255, 255))
+
+    # 진동 효과 만들기
+    shaking_bool = True
+    shake_offset = shaking_camera(1.9, 0.09, 0.09)
+    seq_sway_x= shake_offset[0]
+    seq_offset_y= shake_offset[1]
+
+    # 스크린 블릿
+    screen.blit(talk_box, (talk_box_x+ seq_sway_x, talk_box_y + seq_offset_y))
+    screen.blit(text_surface, (text_start_x + seq_sway_x, text_start_y + seq_offset_y))
+    return
+def Complete_sign():
+    return
 
 # --- 메인 게임 루프 ---
 def main():
@@ -748,6 +876,9 @@ def main():
                     corridor_scale = 1.0
                     corridor_tick = 0.0
                     kick_timer = 0 # [수정됨] 여기서 초기화해야 합니다.
+                elif state == 'sign' and WAIVER_ON_TABLE_btn.check_for_input(mouse_pos):
+                    mouse_cursor_arrow()
+                    state = 'complete_sign'
         screen.fill(BLACK)
         if state == 'menu':
             menu_blit(mouse_pos)
@@ -760,9 +891,11 @@ def main():
         elif state == 'lobby_walk':
             lobby_walk()
         elif state == 'corridor_walk':
-            corridor_walk(flicker_value)
+            corridor_walk(flicker_value, mouse_pos)
         elif state == 'sign':
-            Sign_blit()
+            Sign_blit(mouse_pos)
+        elif state == 'complete_sign':
+            Complete_sign()
         pygame.display.update()
         TIME.tick(60)
 
