@@ -114,6 +114,8 @@ class Action:
 #ai_count=[실탄 수,공포탄 수]
 def ai_turn(ai_class,ai_count,target,ing_bullet=0):
     if (ai_count[1]==0 or ing_bullet==1) and (target.HP== 1 or (target.HP==2 and "Hand_Saw" in ai_class.inven)):
+        if "Hand_Saw" in ai_class.inven:
+            ai_class.Hand_Saw()
         target.hp=0
         return None
     
