@@ -796,20 +796,55 @@ def talk_text_move(text):
     return
 
 up_waiver_tick = 0
+dis_img_tick = 0
+IMG_x_position = 0
+IMG_y_position = 0
+img_x = 0
+img_y = 0
+img_name = 'start'
+
+GAMEROOM_TABLE_IMG = pygame.image.load("sign_imgs/gameroom_table.png").convert_alpha()
+gameroom_table_img = pygame.transform.smoothscale(GAMEROOM_TABLE_IMG,(screen_width, screen_height))
+scale_img = pygame.transform.scale(SEE_WAIVER_VIEW,(screen_width, screen_height))
 def Complete_sign():
-    global screen, up_waiver_tick
-    scale_img = pygame.transform.scale(SEE_WAIVER_VIEW,(screen_width, screen_height))
-    rect = scale_img.get_rect()
-    rect.center = (screen_width_half, screen_height_half)
-    screen.blit(scale_img, rect)
-    if up_waiver_tick <= 5:
-        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_TABLE, (int(0.13993*screen_width)+up_waiver_tick*200,int(0.18778*screen_height)+up_waiver_tick*200))
-        WAIVER_ON_TABLE_img = pygame.transform.rotate(WAIVER_ON_TABLE_img, -3.2*up_waiver_tick)
-        screen.blit(WAIVER_ON_TABLE_img, (int(0.44097*screen_width + up_waiver_tick), int(0.19944*screen_height + up_waiver_tick)))
-    else:
-        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
-        screen.blit(WAIVER_ON_TABLE_img, WAIVER_ON_TABLE_img.get_rect(center = (screen_width_half, screen_height_half)))
+    global screen, up_waiver_tick, dis_img_tick, IMG_y_position, IMG_x_position, img_x, img_y, img_name
+
+    if img_name == 'start':
+        rect = scale_img.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(scale_img, rect)
+        if up_waiver_tick <= 5:
+            WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_TABLE, (int(0.13993*screen_width)+up_waiver_tick*200,int(0.18778*screen_height)+up_waiver_tick*200))
+            WAIVER_ON_TABLE_img = pygame.transform.rotate(WAIVER_ON_TABLE_img, -3.2*up_waiver_tick)
+            screen.blit(WAIVER_ON_TABLE_img, (int(0.44097*screen_width + up_waiver_tick), int(0.19944*screen_height + up_waiver_tick)))
+        elif up_waiver_tick <= 10:
+            WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
+            screen.blit(WAIVER_ON_TABLE_img, WAIVER_ON_TABLE_img.get_rect(center = (screen_width_half, screen_height_half)))
+        else:
+            rect = gameroom_table_img.get_rect()
+            rect.center = (screen_width_half, screen_height_half)
+            screen.blit(gameroom_table_img, rect)
+            
+            WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
+            screen.blit(WAIVER_ON_TABLE_img, WAIVER_ON_TABLE_img.get_rect(center = (screen_width_half, screen_height_half)))
+            img_name = 'end'
+    elif img_name == 'end' and up_waiver_tick > 10:
+        rect = gameroom_table_img.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(gameroom_table_img, rect)
+        if IMG_x_position + img_x < 0 and IMG_y_position + img_y > screen_height:
+            return
+        else:
+            WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
+            WAIVER_ON_TABLE_img = pygame.transform.rotate(WAIVER_ON_TABLE_img, -0.6*up_waiver_tick)
+            img_x = WAIVER_ON_TABLE_img.get_rect().size[0]
+            img_y = WAIVER_ON_TABLE_img.get_rect().size[1]
+            IMG_x_position = screen_width_half-(img_x/2) - dis_img_tick * 30
+            IMG_y_position = screen_height_half-(img_y/2) + dis_img_tick * 40
+            screen.blit(WAIVER_ON_TABLE_img, (IMG_x_position, IMG_y_position))
+
     up_waiver_tick += 1
+    dis_img_tick += 1
     return
 
 # --- 메인 게임 루프 ---
