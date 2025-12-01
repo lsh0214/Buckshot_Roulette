@@ -110,3 +110,11 @@ class Action:
         self.inven[inven_index]=0
         target.inven[target_index]=0
         return result
+#메인에서 ai용 카운트하는 변수 만들어서 사용
+#ai_count=[실탄 수,공포탄 수]
+def ai_turn(ai_class,ai_count,target,ing_bullet=0):
+    if (ai_count[1]==0 or ing_bullet==1) and (target.HP== 1 or (target.HP==2 and "Hand_Saw" in ai_class.inven)):
+        target.hp=0
+        return
+    
+#탄 유추, 남은 실탄 공포 갯수 카운트
