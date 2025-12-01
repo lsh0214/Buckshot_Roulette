@@ -639,34 +639,15 @@ def corridor_walk(flicker_value, mouse_pos):
 
 #동의서 이미지 로드
 GAMEROOM_DEALER_FACE_1 = pygame.image.load("sign_imgs/gameroom_dealer_face_1.png").convert_alpha()
-# GAMEROOM_DEALER_FACE_1 = pygame.transform.scale(GAMEROOM_DEALER_FACE_1, (screen_width,screen_height))
-
 GAMEROOM_DEALER_FACE_2 = pygame.image.load("sign_imgs/gameroom_dealer_face_2.png").convert_alpha()
-# GAMEROOM_DEALER_FACE_2 = pygame.transform.scale(GAMEROOM_DEALER_FACE_2, (screen_width,screen_height))
-
 GAMEROOM_DEALER_FACE_3 = pygame.image.load("sign_imgs/gameroom_dealer_face_3.png").convert_alpha()
-# GAMEROOM_DEALER_FACE_3 = pygame.transform.scale(GAMEROOM_DEALER_FACE_3, (screen_width,screen_height))
-
 GAMEROOM_DEALER_HAND_O = pygame.image.load("sign_imgs/gameroom_dealer_handO.png").convert_alpha()
-# GAMEROOM_DEALER_HAND_O = pygame.transform.scale(GAMEROOM_DEALER_HAND_O, (screen_width,screen_height))
-
 GAMEROOM_DEALER_HAND_X = pygame.image.load("sign_imgs/gameroom_dealer_handX.png").convert_alpha()
-# GAMEROOM_DEALER_HAND_X = pygame.transform.scale(GAMEROOM_DEALER_HAND_X, (screen_width,screen_height))
-
 GAMEROOM_DEALER_HAND_CROOK = pygame.image.load("sign_imgs/gameroom_dealer_hand_crook.png").convert_alpha()
-# GAMEROOM_DEALER_HAND_CROOK = pygame.transform.scale(GAMEROOM_DEALER_HAND_CROOK, (screen_width,screen_height))
-
 GAMEROOM_DEALER_HAND_CROOK_ON_TABLE = pygame.image.load("sign_imgs/gameroom_dealer_hand_crookOntable.png").convert_alpha()
-# GAMEROOM_DEALER_HAND_CROOK_ON_TABLE = pygame.transform.scale(GAMEROOM_DEALER_HAND_CROOK_ON_TABLE, (screen_width,screen_height))
-
 WAIVER_ON_HAND = pygame.image.load("sign_imgs/waiver_onhand_img.png").convert_alpha()
-# WAIVER_ON_HAND = pygame.transform.scale(WAIVER_ON_HAND, (screen_width,screen_height))
-
 WAIVER_ON_TABLE = pygame.image.load("sign_imgs/waiver_ontable_img.png").convert_alpha()
-# WAIVER_ON_TABLE = pygame.transform.scale(WAIVER_ON_TABLE, (screen_width,screen_height))
-
-SEE_WAIVER_VIEW = pygame.image.load("sign_imgs/see_waiver_img.png").convert_alpha()
-# SEE_WAIVER_VIEW = pygame.transform.scale(SEE_WAIVER_VIEW, (screen_width,screen_height))
+SEE_WAIVER_VIEW = pygame.image.load("sign_imgs/see_waiver_no.png").convert_alpha()
 
 sign_tick = 0
 img = None
@@ -675,10 +656,9 @@ angle = 0
 imgs_not = [GAMEROOM_DEALER_FACE_1, GAMEROOM_DEALER_FACE_2]
 
 #게임 로비 필요한 요소들 정리
-WAIVER_ON_TABLE = pygame.transform.smoothscale(WAIVER_ON_TABLE, (int(0.13993*screen_width),int(0.18778*screen_height)))
+WAIVER_ON_TABLE_btn_img = pygame.transform.smoothscale(WAIVER_ON_TABLE, (int(0.13993*screen_width),int(0.18778*screen_height)))
 # 버튼을 전역으로 선언하지 않고, 함수 내에서 생성
-WAIVER_ON_TABLE.set_alpha(0)
-WAIVER_ON_TABLE_btn = Button(WAIVER_ON_TABLE, int(0.44097*screen_width), int(0.19944*screen_height))
+WAIVER_ON_TABLE_btn = Button(WAIVER_ON_TABLE_btn_img, int(0.44097*screen_width), int(0.19944*screen_height))
 #게임 동의서 사인 블릿 함수
 def Sign_blit(mouse_pos):
     global state, screen, sign_tick, img, angle, SEE_WAIVER_VIEW
@@ -767,7 +747,6 @@ def Sign_blit(mouse_pos):
                 # 버튼 그리기
                 WAIVER_ON_TABLE_btn.check_for_hover(mouse_pos)
                 WAIVER_ON_TABLE_btn.update(screen) 
-    return
 
 talk_text_index = 0
 talk_text_timer = 0
@@ -815,13 +794,27 @@ def talk_text_move(text):
     screen.blit(talk_box, (talk_box_x+ seq_sway_x, talk_box_y + seq_offset_y))
     screen.blit(text_surface, (text_start_x + seq_sway_x, text_start_y + seq_offset_y))
     return
+
+up_waiver_tick = 0
 def Complete_sign():
+    global screen, up_waiver_tick
+    scale_img = pygame.transform.scale(SEE_WAIVER_VIEW,(screen_width, screen_height))
+    rect = scale_img.get_rect()
+    rect.center = (screen_width_half, screen_height_half)
+    screen.blit(scale_img, rect)
+    if up_waiver_tick <= 5:
+        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_TABLE, (int(0.13993*screen_width)+up_waiver_tick*200,int(0.18778*screen_height)+up_waiver_tick*200))
+        WAIVER_ON_TABLE_img = pygame.transform.rotate(WAIVER_ON_TABLE_img, -3.2*up_waiver_tick)
+        screen.blit(WAIVER_ON_TABLE_img, (int(0.44097*screen_width + up_waiver_tick), int(0.19944*screen_height + up_waiver_tick)))
+    else:
+        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
+        screen.blit(WAIVER_ON_TABLE_img, WAIVER_ON_TABLE_img.get_rect(center = (screen_width_half, screen_height_half)))
+    up_waiver_tick += 1
     return
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos, shaking_bool, shake_angle, check_num, corridor_tick, corridor_scale
-    global walk_angle, kick_timer, walk_drift_x, walk_tick, walk_scale
+    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer
 
     running = True
     while running:
@@ -830,18 +823,26 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign':
+                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign' or state == 'complete_sign':
+                    """
+                    밑은 단축을 위해서 만들어둔 초기화임. 꼭 제출 전에 확인해서 없애달라고 얘기해줘요..
+                    """
+                    sign_tick = 0
+                    img = None
+                    current_tick = 0
+                    angle = 0
+                    up_waiver_tick = 0
+                    talk_text_index = 0
+                    talk_text_timer = 0
                     state = 'menu'
-                    shaking_bool = True
-                    shake_angle = 0
+                elif state == 'menu':
+                    state = 'sign'
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
                         print("시작 버튼 눌림")
-                        check_num = fade_out()
+                        fade_out()
                         state = 'lobby'
-                        shaking_bool = True
-                        shake_angle = 0
                         # 게임 시작 로직 추가
                     elif multi_btn.check_for_input(mouse_pos):
                         print("멀티 버튼 눌림")
@@ -861,24 +862,17 @@ def main():
                         
             
                 elif state == 'lobby' and LOBBY_DOOR_btn.check_for_input(mouse_pos):
-                    shaking_bool = False
                     mouse_cursor_arrow()
-                    state = 'lobby_walk'  # 새로운 상태 정의
-                    IS_WALKING = True
-                    walk_scale = 1.2
-                    walk_tick = 0.0
-                    walk_drift_x = 0.0
-                    kick_timer = 0
-                    walk_angle = 0.0
+                    state = 'lobby_walk'
+
                 elif state == 'corridor' and CORRIDOR_DOOR_btn.check_for_input(mouse_pos):
                     mouse_cursor_arrow()
                     state = 'corridor_walk'
-                    corridor_scale = 1.0
-                    corridor_tick = 0.0
-                    kick_timer = 0 # [수정됨] 여기서 초기화해야 합니다.
+
                 elif state == 'sign' and WAIVER_ON_TABLE_btn.check_for_input(mouse_pos):
                     mouse_cursor_arrow()
                     state = 'complete_sign'
+
         screen.fill(BLACK)
         if state == 'menu':
             menu_blit(mouse_pos)
@@ -905,3 +899,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# 전체 코드 줄 = 902줄, AI 사용 줄 = 268줄
