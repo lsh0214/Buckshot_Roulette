@@ -30,24 +30,27 @@ L_BLACK = (95,95,95)
 BLACK = (0,0,0)
 FONT = "Fake Receipt.otf"
 LOGO = pygame.image.load('menu_imgs/Buckshot_logo.png').convert_alpha()
-LOGO = pygame.transform.scale(LOGO, (950,750))
+LOGO = pygame.transform.scale(LOGO, (int(screen_width* 0.330),int(screen_height*0.417)))
 KANGNAM_LOGO = pygame.image.load('menu_imgs/KangnamUniversity.png').convert_alpha()
-KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (200,200))
+KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (int(screen_width  * 0.0694),int(screen_height * 0.1111)))
 MENU_BULLET_IMG_1 = pygame.image.load('menu_imgs/menu_bullet_img1.png').convert_alpha()
 MENU_BULLET_IMG_2 = pygame.image.load('menu_imgs/menu_bullet_img2.png').convert_alpha()
 MENU_SCROLL_SPEED = 5
 TIME = pygame.time.Clock()
 OUR_LOGO = pygame.image.load('credit_imgs/our_logo.png').convert_alpha()
-OUR_LOGO = pygame.transform.scale(OUR_LOGO, (1000,800))
+OUR_LOGO = pygame.transform.scale(OUR_LOGO, (int(screen_width*0.347),int(screen_height*0.444)))
 CREDIT_SCROLL_SPEED = 3
 
 #초기 화면 설정
 state = 'menu'
 
+BASE_WIDTH, BASE_HEIGHT = 2880, 1800  # 기준 해상도, height은 나중에 봐서 버리자
 
 #기본 폰트 함수
 def get_font(size):
-    return pygame.font.Font(FONT, size)
+    scale = screen_width / BASE_WIDTH  # 또는 height 기준으로 해도 됨
+    scaled_size = int(size * scale)
+    return pygame.font.Font(FONT, scaled_size)
 
 #커서 모양 바꾸기 함수
 def mouse_cursor_hand():
@@ -1031,5 +1034,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# 전체 코드 줄 = 902줄, AI 사용 줄 = 268줄
