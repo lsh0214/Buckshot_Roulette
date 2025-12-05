@@ -828,7 +828,7 @@ GAMEROOM_TABLE_IMG = pygame.image.load("sign_imgs/gameroom_table.png").convert_a
 gameroom_table_img = pygame.transform.smoothscale(GAMEROOM_TABLE_IMG,(screen_width, screen_height))
 
 scale_img = pygame.transform.scale(SEE_WAIVER_VIEW,(screen_width, screen_height))
-WAIVER_ON_HAND_btn_img = pygame.transform.scale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200), int(0.18778*screen_height+ 5*200)))
+WAIVER_ON_HAND_btn_img = pygame.transform.scale(WAIVER_ON_HAND,(int(0.4865*screen_width), int(0.7433*screen_height)))
 WAIVER_ON_HAND_btn = Button(WAIVER_ON_HAND_btn_img, screen_width_half, screen_height_half)
 
 def Complete_sign(mouse_pos):
@@ -889,8 +889,8 @@ def Complete_sign_onClick():
         WAIVER_ON_TABLE_img = pygame.transform.rotate(WAIVER_ON_TABLE_img, 0.5*dis_img_tick)
         img_x = WAIVER_ON_TABLE_img.get_rect().size[0]
         img_y = WAIVER_ON_TABLE_img.get_rect().size[1]
-        IMG_x_position = screen_width_half-(img_x/2) - dis_img_tick * 30
-        IMG_y_position = screen_height_half-(img_y/2) + dis_img_tick * 40
+        IMG_x_position = screen_width_half-(img_x/2) - dis_img_tick * 50
+        IMG_y_position = screen_height_half-(img_y/2) + dis_img_tick * 60
         screen.blit(WAIVER_ON_TABLE_img, (IMG_x_position, IMG_y_position))
     dis_img_tick += 1
 
@@ -905,7 +905,7 @@ def moniter_zoomIn():
 
         scaled_current = pygame.transform.scale(SEE_WAIVER_VIEW, (width, height))
         rect = scaled_current.get_rect()
-        rect.center = (screen_width_half - score_tick * 50, screen_height_half + score_tick * 10)
+        rect.center = (screen_width_half - int(score_tick * 0.01736*screen_width), screen_height_half + int(score_tick * 0.00556*screen_height))
 
         screen.blit(scaled_current, rect)
     elif score_tick <=15:
