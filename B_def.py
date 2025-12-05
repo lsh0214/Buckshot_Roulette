@@ -112,12 +112,30 @@ class Action:
         return result
 #메인에서 ai용 카운트하는 변수 만들어서 사용
 #ai_count=[실탄 수,공포탄 수]
+#유저와 ai 객체 명 각각 user, ai
 def ai_turn(ai_class,ai_count,target,ing_bullet=0):
-    if (ai_count[1]==0 or ing_bullet==1) and (target.HP== 1 or (target.HP==2 and "Hand_Saw" in ai_class.inven)):
-        if "Hand_Saw" in ai_class.inven:
-            ai_class.Hand_Saw()
-        target.hp=0
-        return None
-    
-    
+    ret_list=[]
+    end_bool=0
+    while 1:
+        #1단계 킬각확인
+        if (ai_count[1]==0 or ing_bullet==1) and (target.hp== 1): #객체를 넣어 바로 사용하도록 하고자 하였지만 main에서 선언해줘야하는 객체이기에 불가능함 문자열로 된 리스트 나열 예정
+            ai_class.Shotgun(1,target)
+            ret_list.append("총1")
+            return ret_list
+        if (ai_count[1]==0 or ing_bullet==1) and (target.hp==2 and "Hand_Saw" in ai_class.inven):
+            inven_index=ai_class.inven.index("Hand_Saw")
+            ai_class.Hand_Saw(inven_index)
+            ret_list.append("톱"+str(inven_index))
+            ai_class.Shotgun(1,target)
+            ret_list.append("총1")
+            return ret_list
+        #2단계 HP올리기
+        if ai_class.hp_max<ai_class.hp:
+            if "Cigarette_Pac" in ai_class.inven:
+                ret_list.append("hp 회복사용")
+            ai_class.hp+1
+            end_bool = 1
+        
+        
+        
 #탄 유추, 남은 실탄 공포 갯수 카운트
