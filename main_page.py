@@ -33,6 +33,8 @@ LOGO = pygame.image.load('menu_imgs/Buckshot_logo.png').convert_alpha()
 LOGO = pygame.transform.scale(LOGO, (int(screen_width* 0.330),int(screen_height*0.417)))
 KANGNAM_LOGO = pygame.image.load('menu_imgs/KangnamUniversity.png').convert_alpha()
 KANGNAM_LOGO = pygame.transform.scale(KANGNAM_LOGO, (int(screen_width  * 0.0694),int(screen_height * 0.1111)))
+kangnam_logo_x = int(screen_width  * 0.0694)
+kangnam_logo_y = int(screen_height  * 0.1111)
 MENU_BULLET_IMG_1 = pygame.image.load('menu_imgs/menu_bullet_img1.png').convert_alpha()
 MENU_BULLET_IMG_2 = pygame.image.load('menu_imgs/menu_bullet_img2.png').convert_alpha()
 MENU_SCROLL_SPEED = 5
@@ -170,7 +172,7 @@ option_btn = Button(None, screen_width_half, first_btn_y + 2 * gap, "OPTIONS",  
 credit_btn = Button(None, screen_width_half, first_btn_y + 3 * gap, "CREDITS",   get_font(80), WHITE, L_BLACK)
 exit_btn   = Button(None, screen_width_half, first_btn_y + 4 * gap, "EXIT",      get_font(80), WHITE, L_BLACK)
 
-kangnam_link_btn = Button(KANGNAM_LOGO, screen_width - 200 + 100, screen_height - 200 + 100)
+kangnam_link_btn = Button(KANGNAM_LOGO, screen_width -kangnam_logo_x/2, screen_height -kangnam_logo_y/2)
 
 menu_buttons = [start_btn, multi_btn, option_btn, credit_btn, exit_btn, kangnam_link_btn]
 
@@ -195,12 +197,15 @@ def menu_blit(mouse_pos):
     #버전 텍스트
     txt = get_font(40)
     version_txt = txt.render('0.0.1(Prototype)', True, L_BLACK)
-
+    txt_x = version_txt.get_rect().size[0]
+    txt_y = version_txt.get_rect().size[1]
+    
     #blit 모음
     screen.blit(LOGO, (LOGO_x_position, LOGO_y_position))
     screen.blit(MENU_BULLET_IMG_1, (0, MENU_BULLET_IMG_1_y_pos))
     screen.blit(MENU_BULLET_IMG_2, (0, MENU_BULLET_IMG_2_y_pos))
-    screen.blit(version_txt,(30, screen_height - 80))
+
+    screen.blit(version_txt,(20, screen_height - txt_y - 10))
 
     for btn in menu_buttons:
         btn.check_for_hover(mouse_pos)
@@ -975,7 +980,7 @@ def main():
                     state = 'menu'
                 elif state == 'menu':
                     state = 'complete_sign'
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
                         print("시작 버튼 눌림")
