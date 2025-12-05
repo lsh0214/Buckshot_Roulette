@@ -118,24 +118,56 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
     end_bool=0
     while 1:
         #1단계 킬각확인
-        if (ai_count[1]==0 or ing_bullet==1) and (target.hp== 1): #객체를 넣어 바로 사용하도록 하고자 하였지만 main에서 선언해줘야하는 객체이기에 불가능함 문자열로 된 리스트 나열 예정
-            ai_class.Shotgun(1,target)
+        if (ai_count[1]==0 or ing_bullet==1) and (target.hp== 1): #객체를 넣어 바로 상호작용을 하고 미리 데이터 처리를 한후 후 애니메이션을 사용함
             ret_list.append("총1")
+            ret_list.append(ai_class.Shotgun(1,target))
             return ret_list
         if (ai_count[1]==0 or ing_bullet==1) and (target.hp==2 and "Hand_Saw" in ai_class.inven):
             inven_index=ai_class.inven.index("Hand_Saw")
-            ai_class.Hand_Saw(inven_index)
             ret_list.append("톱"+str(inven_index))
-            ai_class.Shotgun(1,target)
+            ret_list.append(ai_class.Hand_Saw(inven_index))
             ret_list.append("총1")
+            ret_list.append(ai_class.Shotgun(1,target))
             return ret_list
         #2단계 HP올리기
         if ai_class.hp_max<ai_class.hp:
-            if "Cigarette_Pac" in ai_class.inven:
-                ret_list.append("hp 회복사용")
-            ai_class.hp+1
-            end_bool = 1
+            if "Cigarette_Pack" in ai_class.inven:
+                inven_index=ai_class.inven.index("Cigarette_Pack")
+                ret_list.append("담"+str(inven_index))
+                ret_list.append(ai_class.Cigarette_Pack(inven_index))
+                end_bool=1
+            elif "Adrenaline" in ai_class.inven and "Cigarette_Pack" in target.inven:
+                target_inven_index=target.inven.index("Cigarette_Pack")
+                inven_index=ai_class.inven.index("Adrenaline")
+                ret_list.append("아담"+str(target_inven_index)+str(inven_index))
+                ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
+                end_bool=1
+            elif "Expired_Medicine" in ai_class.inven:
+                inven_index=ai_class.inven.index("Expired_Medicine")
+                ret_list.append("담"+str(inven_index))
+                ret_list.append(ai_class.Expired_Medicine(inven_index))
+                end_bool=1
+            elif "Adrenaline" in ai_class.inven and "Expired_Medicine" in target.inven:
+                target_inven_index=target.inven.index("Expired_Medicine")
+                inven_index=ai_class.inven.index("Adrenaline")
+                ret_list.append("아약"+str(target_inven_index)+str(inven_index))
+                ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
+                end_bool=1
+        #3단계 변수차단
+        if ai_class.turn_bool[1]==0:
+            if "Handcuffs" in ai_class.inven:
+                inven_index=ai_class.inven.index("Handcuffs")
+                ret_list.append("수"+str(inven_index))
+                ret_list.append(ai_class.Handcuffs(inven_index))
+                end_bool=1
+            elif "Adrenaline" in ai_class.inven and "Handcuffs" in target.inven:
+                target_inven_index=target.inven.index("Handcuffs")
+                inven_index=ai_class.inven.index("Adrenaline")
+                ret_list.append("아수"+str(target_inven_index)+str(inven_index))
+                ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
+                end_bool=1
+        #4단계 정보수집
         
         
         
-#탄 유추, 남은 실탄 공포 갯수 카운트
+#탄 유추, 남은 실탄 공포 갯수 카운트ai턴 작업 80%
