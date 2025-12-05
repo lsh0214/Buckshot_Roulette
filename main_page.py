@@ -949,11 +949,45 @@ def moniter_zoomOut():
         return
     score_tick-=1
 
+BOX_VIEW = pygame.image.load("box_imgs/box_view.png").convert_alpha()
+box_view_img = pygame.transform.smoothscale(BOX_VIEW, (screen_width, screen_height))
+CLOSE_BOX = pygame.image.load("box_imgs/box_close.png").convert_alpha()
+close_box_img = pygame.transform.smoothscale(CLOSE_BOX, (int(screen_width*0.2736), int(screen_height*0.3117)))
+OPEN_BOX = pygame.image.load("box_imgs/box_open.png").convert_alpha()
+open_box_img = pygame.transform.smoothscale(OPEN_BOX, (int(screen_width*0.2736), int(screen_height*0.3117)))
+
+inGame_tick = 0
 def inGame():
-    global screen, state
-    rect = gameroom_table_img.get_rect()
-    rect.center = (screen_width_half, screen_height_half)
-    screen.blit(gameroom_table_img, rect)
+    global screen, state, inGame_tick
+    if inGame_tick <=5:
+        rect = gameroom_table_img.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(gameroom_table_img, rect)
+    elif inGame_tick <=15:
+        DURATION = 10
+        local_timer = inGame_tick - 5
+        progress = local_timer / DURATION
+        seq_offset_y = screen_height * 0.03  * progress
+        rect = gameroom_table_img.get_rect()
+        rect.center = (screen_width_half, screen_height_half+seq_offset_y)
+        screen.blit(gameroom_table_img, rect)
+    else:
+        rect = box_view_img.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(box_view_img, rect)
+        # if inGame_tick <=30:
+        rect = close_box_img.get_rect()
+        rect.topleft = (int(screen_width*0.3619), int(screen_height*0.5356))
+        screen.blit(close_box_img, rect)
+        # else:
+        #     rect = open_box_img.get_rect()
+        #     rect.topleft = (int(screen_width*0.3819), int(screen_height*0.5356))
+        #     screen.blit(open_box_img, rect)
+
+
+
+    inGame_tick+=1
+
 
 # --- 메인 게임 루프 ---
 def main():
