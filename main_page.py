@@ -38,7 +38,7 @@ MENU_BULLET_IMG_2 = pygame.image.load('menu_imgs/menu_bullet_img2.png').convert_
 MENU_SCROLL_SPEED = 5
 TIME = pygame.time.Clock()
 OUR_LOGO = pygame.image.load('credit_imgs/our_logo.png').convert_alpha()
-OUR_LOGO = pygame.transform.scale(OUR_LOGO, (int(screen_width*0.347),int(screen_height*0.444)))
+OUR_LOGO = pygame.transform.scale(OUR_LOGO, (int(screen_width*0.347),int(screen_height*0.464)))
 CREDIT_SCROLL_SPEED = 3
 
 #초기 화면 설정
@@ -146,12 +146,30 @@ MENU_BULLET_IMG_2 = pygame.transform.scale(MENU_BULLET_IMG_2, (screen_width,scre
 MENU_BULLET_IMG_1_y_pos = 0
 MENU_BULLET_IMG_2_y_pos = screen_height
 
-#버튼 세팅
-start_btn = Button(None, screen_width_half, screen_height_half + 350, "START", get_font(80), WHITE, L_BLACK)
-multi_btn = Button(None, screen_width_half, screen_height_half + 430, "MULTIPLAY", get_font(80), WHITE, L_BLACK)
-option_btn = Button(None, screen_width_half, screen_height_half + 510, "OPTIONS", get_font(80), WHITE, L_BLACK)
-credit_btn = Button(None, screen_width_half, screen_height_half + 590, "CREDITS", get_font(80), WHITE, L_BLACK)
-exit_btn = Button(None, screen_width_half, screen_height_half + 670, "EXIT", get_font(80), WHITE, L_BLACK)
+#로고 이미지
+LOGO_size_width = LOGO.get_rect().size[0]
+LOGO_size_height = LOGO.get_rect().size[1]
+LOGO_x_position = screen_width_half-(LOGO_size_width/2)
+LOGO_y_position = int(screen_height * 0.13)
+
+# LOGO 위치 계산 후
+LOGO_rect = LOGO.get_rect()
+LOGO_rect.topleft = (LOGO_x_position, LOGO_y_position)
+logo_bottom = LOGO_rect.bottom
+
+# 비율로 간격 정의
+FIRST_OFFSET_RATIO = 0.12   # LOGO 아래 첫 버튼까지 거리 (screen_height의 15%)
+GAP_RATIO          = 0.05   # 버튼 사이 간격 (screen_height의 6%)
+
+first_btn_y = logo_bottom + int(screen_height * FIRST_OFFSET_RATIO)
+gap        = int(screen_height * GAP_RATIO)
+
+start_btn  = Button(None, screen_width_half, first_btn_y + 0 * gap, "START",     get_font(80), WHITE, L_BLACK)
+multi_btn  = Button(None, screen_width_half, first_btn_y + 1 * gap, "MULTIPLAY", get_font(80), WHITE, L_BLACK)
+option_btn = Button(None, screen_width_half, first_btn_y + 2 * gap, "OPTIONS",   get_font(80), WHITE, L_BLACK)
+credit_btn = Button(None, screen_width_half, first_btn_y + 3 * gap, "CREDITS",   get_font(80), WHITE, L_BLACK)
+exit_btn   = Button(None, screen_width_half, first_btn_y + 4 * gap, "EXIT",      get_font(80), WHITE, L_BLACK)
+
 kangnam_link_btn = Button(KANGNAM_LOGO, screen_width - 200 + 100, screen_height - 200 + 100)
 
 menu_buttons = [start_btn, multi_btn, option_btn, credit_btn, exit_btn, kangnam_link_btn]
@@ -178,12 +196,8 @@ def menu_blit(mouse_pos):
     txt = get_font(40)
     version_txt = txt.render('0.0.1(Prototype)', True, L_BLACK)
 
-    #로고 이미지
-    LOGO_size_width = LOGO.get_rect().size[0]
-    LOGO_x_position = screen_width_half-(LOGO_size_width/2)
-
     #blit 모음
-    screen.blit(LOGO, (LOGO_x_position, 250))
+    screen.blit(LOGO, (LOGO_x_position, LOGO_y_position))
     screen.blit(MENU_BULLET_IMG_1, (0, MENU_BULLET_IMG_1_y_pos))
     screen.blit(MENU_BULLET_IMG_2, (0, MENU_BULLET_IMG_2_y_pos))
     screen.blit(version_txt,(30, screen_height - 80))
