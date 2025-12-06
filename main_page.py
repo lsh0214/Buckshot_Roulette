@@ -874,11 +874,11 @@ ROUND_IMG = pygame.image.load("moniter_imgs/round_img.png").convert_alpha()
 WINNER_IMG = pygame.image.load("moniter_imgs/winner.png").convert_alpha()
 score_tick = 0
 
-def Complete_sign_onClick():
+def Complete_sign_onClick(mouse_pos):
     global screen,dis_img_tick, IMG_y_position, IMG_x_position, img_x, img_y, up_waiver_tick, state, score_tick
     if IMG_x_position < 0 and IMG_y_position > screen_height:
         state = 'moniter_in'
-        moniter_zoomIn()
+        moniter_zoomIn(mouse_pos)
         return
         
     else:
@@ -894,7 +894,7 @@ def Complete_sign_onClick():
         screen.blit(WAIVER_ON_TABLE_img, (IMG_x_position, IMG_y_position))
     dis_img_tick += 1
 
-def moniter_zoomIn():
+def moniter_zoomIn(mouse_pos):
     global state, screen, score_tick
     score_tick += 1
 
@@ -928,10 +928,10 @@ def moniter_zoomIn():
     else:
         score_tick = 10
         state = 'moniter_out'
-        moniter_zoomOut()
+        moniter_zoomOut(mouse_pos)
         return
 
-def moniter_zoomOut():
+def moniter_zoomOut(mouse_pos):
     global screen, score_tick, state
     if score_tick <= 10 and score_tick > 0:
         zoom_factor = 1.0 + score_tick * 0.05  # 확대 속도를 확 늘림 아래 2줄까지 AI
@@ -944,21 +944,22 @@ def moniter_zoomOut():
 
         screen.blit(scaled_current, rect)
     else:
-        state = 'inGame'
-        inGame()
+        state = 'box_pre'
+        box_pre(mouse_pos)
         return
     score_tick-=1
 
 BOX_VIEW = pygame.image.load("box_imgs/box_view.png").convert_alpha()
 box_view_img = pygame.transform.smoothscale(BOX_VIEW, (screen_width, screen_height))
 CLOSE_BOX = pygame.image.load("box_imgs/box_close.png").convert_alpha()
-close_box_img = pygame.transform.smoothscale(CLOSE_BOX, (int(screen_width*0.2736), int(screen_height*0.3117)))
+close_box_img = pygame.transform.smoothscale(CLOSE_BOX, (int(screen_width*0.3236), int(screen_height*0.3117)))
+closeBox_btn = Button(close_box_img, int(0.3236*screen_width), int(0.3117*screen_height))
 OPEN_BOX = pygame.image.load("box_imgs/box_open.png").convert_alpha()
-open_box_img = pygame.transform.smoothscale(OPEN_BOX, (int(screen_width*0.2736), int(screen_height*0.3117)))
+open_box_img = pygame.transform.smoothscale(OPEN_BOX, (int(screen_width*0.3236), int(screen_height*0.3917)))
 
 inGame_tick = 0
-def inGame():
-    global screen, state, inGame_tick
+def box_pre(mouse_pos):
+    global screen, state, inGame_tick, shaking_bool
     if inGame_tick <=5:
         rect = gameroom_table_img.get_rect()
         rect.center = (screen_width_half, screen_height_half)
@@ -975,23 +976,51 @@ def inGame():
         rect = box_view_img.get_rect()
         rect.center = (screen_width_half, screen_height_half)
         screen.blit(box_view_img, rect)
-        # if inGame_tick <=30:
-        rect = close_box_img.get_rect()
-        rect.topleft = (int(screen_width*0.3619), int(screen_height*0.5356))
-        screen.blit(close_box_img, rect)
-        # else:
-        #     rect = open_box_img.get_rect()
-        #     rect.topleft = (int(screen_width*0.3819), int(screen_height*0.5356))
-        #     screen.blit(open_box_img, rect)
+        if inGame_tick <=30:
+            rect = close_box_img.get_rect()
+            rect.topleft = (int(screen_width*0.3419), int(screen_height*0.5156))
+            screen.blit(close_box_img, rect)
+        # elif inGame_tick <=50:
+        else:
+            shaking_bool = True
+            shake_offset = shaking_camera(1.9, 0.1, 0.1)
+            seq_sway_x= shake_offset[0]
+            seq_offset_y= shake_offset[1]
 
-
-
+            # 버튼 위치 업데이트 (흔들림 적용)
+            closeBox_btn.x_pos = int(screen_width*0.3419) +seq_sway_x
+            closeBox_btn.y_pos = int(screen_height*0.5156) + +seq_offset_y
+            closeBox_btn.btn_rect = closeBox_btn.image_btn.get_rect(topleft=(closeBox_btn.x_pos, closeBox_btn.y_pos))
+            # 버튼 그리기
+            closeBox_btn.check_for_hover(mouse_pos)
+            closeBox_btn.update(screen) 
     inGame_tick+=1
-
+def box_open():
+    global screen, inGame_tick
+    rect = box_view_img.get_rect()
+    rect.center = (screen_width_half, screen_height_half)
+    screen.blit(box_view_img, rect)
+    if inGame_tick<=10:
+        rect = close_box_img.get_rect()
+        rect.topleft = (int(screen_width*0.3419), int(screen_height*0.5156))
+        screen.blit(close_box_img, rect)
+    elif inGame_tick <=20:
+        DURATION = 10
+        local_timer = inGame_tick - 10
+        progress = local_timer / DURATION
+        seq_offset_y = screen_height * 0.03  * progress
+        rect = close_box_img.get_rect()
+        rect.topleft = (int(screen_width*0.3419), int(screen_height*0.5156)-seq_offset_y)
+        screen.blit(close_box_img, rect)
+    else:
+        rect = open_box_img.get_rect()
+        rect.topleft = (int(screen_width*0.3419), int(screen_height*0.4356))
+        screen.blit(open_box_img, rect)
+    inGame_tick+=1
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick
+    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick
 
     running = True
     while running:
@@ -1000,7 +1029,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign' or state == 'complete_sign' or state == 'inGame':
+                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign' or state == 'complete_sign' or state == 'box_pre' or state =='box_open':
                     """
                     밑은 단축을 위해서 만들어둔 초기화임. 꼭 제출 전에 확인해서 없애달라고 얘기해줘요..
                     """
@@ -1052,6 +1081,10 @@ def main():
                 elif state == 'complete_sign' and WAIVER_ON_HAND_btn.check_for_input(mouse_pos):
                     mouse_cursor_arrow()
                     state = 'Complete_sign_onClick'
+                elif state == 'box_pre' and closeBox_btn.check_for_input(mouse_pos):
+                    inGame_tick = 0
+                    mouse_cursor_arrow()
+                    state = 'box_open'
 
         screen.fill(BLACK)
         if state == 'menu':
@@ -1071,13 +1104,15 @@ def main():
         elif state == 'complete_sign':
             Complete_sign(mouse_pos)
         elif state == 'Complete_sign_onClick':
-            Complete_sign_onClick()
+            Complete_sign_onClick(mouse_pos)
         elif state == 'moniter_in':
-            moniter_zoomIn()
+            moniter_zoomIn(mouse_pos)
         elif state == 'moniter_out':
-            moniter_zoomOut()
-        elif state == 'inGame':
-            inGame()
+            moniter_zoomOut(mouse_pos)
+        elif state == 'box_pre':
+            box_pre(mouse_pos)
+        elif state == 'box_open':
+            box_open()
         pygame.display.update()
         TIME.tick(60)
 
