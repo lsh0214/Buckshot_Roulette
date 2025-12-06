@@ -21,6 +21,7 @@ class Action:
         "Burner_Phone":self.Burner_Phone,
         "Inverter":self.Inverter,
         "Expired_Medicine":self.Expired_Medicine,
+        "Adrenaline":self.Adrenaline
     }
     
     def start_inven(self):
@@ -42,8 +43,10 @@ class Action:
         else:
             if self.bullet[-1]== "실탄":
                 target.hp -= self.shotgun_hp
-            
-        self.shotgun_hp=1
+
+        if self.shotgun_hp==2:
+            self.shotgun_hp=1
+            return "톱"+"실탄" if self.bullet.pop() == "실탄" else "공포탄"
         return "실탄" if self.bullet.pop() == "실탄" else "공포탄"
     
     # 모든 아이템 함수는 선택한 아이템 목록값을 0으로 변경합니다.
@@ -63,7 +66,8 @@ class Action:
         return self.bullet[-1]
 
     def Cigarette_Pack(self,inven_index,ad=0):#hp+1를 합니다.
-        self.hp+=1
+        if self.hp_max==self.hp:
+            self.hp+=1
         if ad == 0:
             self.inven[inven_index]=0
 
