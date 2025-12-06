@@ -115,7 +115,7 @@ class Action:
         target.inven[target_index]=0
         return result
 #메인에서 ai용 카운트하는 변수 만들어서 사용
-#ai_count=[live bullet 수,공포탄 수]
+#ai_count=[실탄 수,공포탄 수]
 #ing_bullet = 알수없음 0, 실탄 1 공포탄 2
 #유저와 ai 객체 명 각각 user, ai
 def ai_turn(ai_class,ai_count,target,ing_bullet=0):
@@ -171,14 +171,73 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                 ret_list.append("아수"+str(target_inven_index)+str(inven_index))
                 ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
                 end_bool=1
-        #4단계 정보수집
+        #4단계 정보수집 여기에서 정보 수집 사항 제어 변수 추가 해야함.
         if ing_bullet == 0:
             if "Burner_Phone" in ai_class.inven:
                 inven_index=ai_class.inven.index("Burner_Phone")
                 ret_list.append("대"+str(inven_index))
                 ret_list.append(ai_class.Burner_Phone(inven_index))
                 end_bool=1
-        
-        
-        
-#탄 유추, 남은 실탄 공포 갯수 카운트ai턴 작업 80%
+            elif "Adrenaline" in ai_class.inven and "Burner_Phone" in target.inven:
+                target_inven_index=target.inven.index("Burner_Phone")
+                inven_index=ai_class.inven.index("Adrenaline")
+                ret_list.append("아대"+str(target_inven_index)+str(inven_index))
+                ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
+                end_bool=1
+            if "Magnifying_Glass" in ai_class.inven:
+                inven_index=ai_class.inven.index("Magnifying_Glass")
+                ret_list.append("돋"+str(inven_index))
+                ret_list.append(ai_class.Magnifying_Glass(inven_index))
+                end_bool=1
+            elif "Adrenaline" in ai_class.inven and "Magnifying_Glass" in target.inven:
+                target_inven_index=target.inven.index("Magnifying_Glass")
+                inven_index=ai_class.inven.index("Adrenaline")
+                ret_list.append("아돋"+str(target_inven_index)+str(inven_index))
+                ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
+                end_bool=1
+        #5단계 탄 조작
+        if ing_bullet == 2:
+            if "Inverter" in ai_class.inven:
+                inven_index=ai_class.inven.index("Inverter")
+                ret_list.append("인"+str(inven_index))
+                ret_list.append(ai_class.Inverter(inven_index))
+                end_bool=1
+            elif "Beer" in ai_class.inven:
+                inven_index=ai_class.inven.index("Beer")
+                ret_list.append("맥"+str(inven_index))
+                ret_list.append(ai_class.Beer(inven_index))
+                end_bool=1
+        #최종 단계!! 확률 싸움
+        if ing_bullet != 0 or end_bool==0:
+            if ing_bullet == 1:
+                ret_list.append("총1")
+                ret_list.append(ai_class.Shotgun(1,target))
+                return ret_list
+            elif ing_bullet == 2:
+                ret_list.append("총1")
+                ret_list.append(ai_class.Shotgun(0,target))
+            elif ai_count[0] > ai_count[1]:
+                ret_list.append("총1")
+                bullet_bool=ai_class.Shotgun(1,target)
+                ret_list.append(bullet_bool)
+                if bullet_bool=="live bullet":
+                    return ret_list
+            elif ai_count[0] < ai_count[1]:
+                ret_list.append("총1")
+                bullet_bool=ai_class.Shotgun(0,target)
+                ret_list.append(bullet_bool)
+                if bullet_bool=="live bullet":
+                    return ret_list
+            else:
+                if lsj_r.rint(1,2) ==1:
+                    ret_list.append("총1")
+                    bullet_bool=ai_class.Shotgun(1,target)
+                    ret_list.append(bullet_bool)
+                    if bullet_bool=="live bullet":
+                        return ret_list
+                else:
+                    ret_list.append("총1")
+                    bullet_bool=ai_class.Shotgun(0,target)
+                    ret_list.append(bullet_bool)
+                    if bullet_bool=="live bullet":
+                        return ret_list
