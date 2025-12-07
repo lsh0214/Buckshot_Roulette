@@ -3,6 +3,8 @@ from screeninfo import get_monitors
 import pygame
 import sys
 import webbrowser
+import lsj_r
+import B_def
 
 """
 초기 설정
@@ -995,7 +997,9 @@ def box_pre(mouse_pos):
             closeBox_btn.check_for_hover(mouse_pos)
             closeBox_btn.update(screen) 
     inGame_tick+=1
-def box_open():
+
+open_box_btn = Button(open_box_img, int(screen_width*0.3236), int(screen_height*0.3917))
+def box_open(mouse_pos):
     global screen, inGame_tick
     rect = box_view_img.get_rect()
     rect.center = (screen_width_half, screen_height_half)
@@ -1013,10 +1017,44 @@ def box_open():
         rect.topleft = (int(screen_width*0.3419), int(screen_height*0.5156)-seq_offset_y)
         screen.blit(close_box_img, rect)
     else:
-        rect = open_box_img.get_rect()
-        rect.topleft = (int(screen_width*0.3419), int(screen_height*0.4356))
-        screen.blit(open_box_img, rect)
+        open_box_btn.btn_rect = open_box_btn.image_btn.get_rect(topleft=(int(screen_width*0.3419), int(screen_height*0.4356)))
+        # 버튼 그리기
+        open_box_btn.check_for_hover(mouse_pos)
+        open_box_btn.update(screen) 
+        # rect = open_box_img.get_rect()
+        # rect.topleft = (int(screen_width*0.3419), int(screen_height*0.4356))
+        # screen.blit(open_box_img, rect)
     inGame_tick+=1
+
+u=B_def.Action(2)
+list(u.inven_list)
+ITEM = ['adre', 'glass', 'beer', 'pill', 'saw', 'ciga', 'phone', 'inverter']
+
+item_index = 0
+
+# --- 2. 비율 상수 정의 (원근감 적용) ---
+
+def box_view_btns(mouse_pos):
+    # for i in
+    return
+def Adrenaline():
+    return
+def Glasses():
+    return
+def Beer():
+    return
+def Pill():
+    return
+def Saw():
+    return
+def cigarette():
+    return
+def Phone():
+    return
+def inverter():
+    return
+
+
 
 # --- 메인 게임 루프 ---
 def main():
@@ -1112,7 +1150,7 @@ def main():
         elif state == 'box_pre':
             box_pre(mouse_pos)
         elif state == 'box_open':
-            box_open()
+            box_open(mouse_pos)
         pygame.display.update()
         TIME.tick(60)
 
