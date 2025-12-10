@@ -1157,6 +1157,93 @@ class ItemManager:
                     return index # 클릭된 아이템의 인덱스 반환
         return None
 # --- 2. 비율 상수 정의 (원근감 적용) ---
+
+# ==================================
+# inGame_imgs 디렉토리 내 이미지 파일
+# ==================================
+
+AFTER_SAW_IMG = "inGame_imgs/after_saw.png"
+AI_FAKE_BULLET_IMG = "inGame_imgs/AIFakebullet.png"
+AI_REAL_BULLET_IMG = "inGame_imgs/AIRealbullet.png"
+BEFORE_SAW_IMG = "inGame_imgs/before_saw.png"
+BULLET_OPEN_VIEW_IMG = "inGame_imgs/bulletOpenView.png"
+DEALER_SHOT_DEALER_VIEW_IMG = "inGame_imgs/dealer_shot_dealer_view.png"
+DEALER_SHOT_ME_VIEW_IMG = "inGame_imgs/dealer_shot_me_view.png"
+FAKE_BULLET_OPEN_IMG = "inGame_imgs/Fakebullet_open.png"
+IN_GAME_HEARGAGE_IMG = "inGame_imgs/inGame_heargage.png"
+ME_SHOT_DEALER_VIEW_IMG = "inGame_imgs/me_shot_dealer_view.png"
+ME_SHOT_ME_VIEW_IMG = "inGame_imgs/me_shot_me_view.png"
+MY_BULLET_REMOVING_IMG = "inGame_imgs/MybulletRemoving.png"
+MY_FAKE_BULLET_IMG = "inGame_imgs/MyFakebullet.png"
+MY_HANDCUFFS_IMG = "inGame_imgs/Myhandcuffs.png"
+MY_REAL_BULLET_IMG = "inGame_imgs/MyRealbullet.png"
+REAL_BULLET_OPEN_IMG = "inGame_imgs/Realbullet_open.png"
+SHOT_CHOICE_IMG = "inGame_imgs/shot_choice.png"
+SHOT_CHOICE_ME_IMG = "inGame_imgs/shot_choice_me.png"
+SHOT_DEALER_CHOICE_IMG = "inGame_imgs/shot_dealer_choice.png"
+WAKEUP_LEFT_IMG = "inGame_imgs/wakeup_left.png"
+WAKEUP_RIGHT_IMG = "inGame_imgs/wakeup_right.png"
+# ==================================
+# money_imgs 디렉토리 내 이미지 파일
+# ==================================
+LEFTCLIP_CLOSE_IMG = "money_imgs/Leftclip_close.png"
+LEFTCLIP_OPEN_IMG = "money_imgs/Leftclip_open.png"
+MONEY_BAG_CLOSE_IMG = "money_imgs/moneyBag_close.png"
+MONEY_BAG_OPEN_IMG = "money_imgs/moneyBag_open.png"
+RIGHTCLIP_CLOSE_IMG = "money_imgs/Rightclip_close.png"
+RIGHTCLIP_OPEN_IMG = "money_imgs/Rightclip_open.png"
+# ==================================
+# AIitem_imgs 디렉토리 내 이미지 파일
+# ==================================
+AI_ADRENALINE_IMG = "AIitem_imgs/AIadrenaline.png"
+AI_BEER_IMG = "AIitem_imgs/AIbeer.png"
+AI_CIGARETTE_IMG = "AIitem_imgs/AIcigarette.png"
+AI_GLASSES_IMG = "AIitem_imgs/AIglasses.png"
+AI_HANDCUFFS_IMG = "AIitem_imgs/AIhandcuffs.png"
+AI_INVERTER_IMG = "AIitem_imgs/AIinverter.png"
+AI_PHONE_IMG = "AIitem_imgs/AIphone.png"
+AI_PILL_IMG = "AIitem_imgs/AIpill.png"
+AI_SAW_IMG = "AIitem_imgs/AIsaw.png"
+# ==================================
+# Myitem_imgs 디렉토리 내 이미지 파일
+# ==================================
+
+MY_ADRENALINE_IMG = "Myitem_imgs/Myadrenaline.png"
+MY_BEER_IMG = "Myitem_imgs/Mybeer.png"
+MY_CIGARETTE_IMG = "Myitem_imgs/Mycigarette.png"
+MY_GLASSES_IMG = "Myitem_imgs/Myglasses.png"
+MY_HANDCUFFS_IMG = "Myitem_imgs/Myhandcuffs.png"
+MY_INVERTER_IMG = "Myitem_imgs/Myinverter.png"
+MY_PHONE_IMG = "Myitem_imgs/Myphone.png"
+MY_PILL_IMG = "Myitem_imgs/Mypill.png"
+MY_SAW_IMG = "Myitem_imgs/Mysaw.png"
+# ==================================
+# Alturn_btn_imgs 디렉토리 내 이미지 파일
+# ==================================
+
+AL_BTTM_LEFT_IMG = "Alturn_btn_imgs/Albttmleft.png"
+AL_BTTM_THREE_IMG = "Alturn_btn_imgs/Albttmthree.png"
+AL_BTTM_TWO_IMG = "Alturn_btn_imgs/Albttmtwo.png"
+AL_BTTM_RIGHT_IMG = "Alturn_btn_imgs/Albttmright.png"
+AL_TOP_LEFT_IMG = "Alturn_btn_imgs/Altopleft.png"
+AL_TOP_RIGHT_IMG = "Alturn_btn_imgs/Altopright.png"
+AL_TOP_THREE_IMG = "Alturn_btn_imgs/Altopthree.png"
+AL_TOP_TWO_IMG = "Alturn_btn_imgs/Altoptwo.png"
+# ==================================
+# dealer_imgs 디렉토리 내 이미지 파일
+# ==================================
+
+DEALER_BULLETING_IMG = "dealer_imgs/dealer_bulleting.png"
+DEALER_HANDCUFFS_IMG = "dealer_imgs/dealer_handcuffs.png"
+DEALER_HURTED_FACE_IMG = "dealer_imgs/dealer_hurted_face.png"
+DEALER_NORMAL_FACE_IMG = "dealer_imgs/dealer_nomal_face.png"
+DEALER_NORMAL_HAND_IMG = "dealer_imgs/dealer_nomal_hand.png" # 파일명 오타(nomal) 반영
+DEALER_RED_EYES_IMG = "dealer_imgs/dealer_redEyes.png"
+DEALER_SHOT_DEALER_PUSH_IMG = "dealer_imgs/dealer_shot_dealer_push.png"
+DEALER_SHOT_ME_IMG = "dealer_imgs/dealer_shot_me.png"
+DEALER_SHOTGUN_IMG = "dealer_imgs/dealer_shotgun.png"
+DEALER_SHOTGUN_AFTER_IMG = "dealer_imgs/dealer_shotgun_after.png"
+DEALER_SHOTGUN_BEFORE_IMG = "dealer_imgs/dealer_shotgun_before.png"
 handcruffs = None
 tick = 0
 comback_bool = False
