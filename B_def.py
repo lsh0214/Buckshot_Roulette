@@ -1,6 +1,6 @@
 import lsj_r
 
-# 처음 세팅해주는 클래스 만들기!!
+# 처음 세팅은 main에서
 
 class Action:
     bullet=[]#'live bullet' or '공포탄' 
@@ -34,6 +34,14 @@ class Action:
     def inven_in(self,item,inven_index):
         self.inven[inven_index]=item
     
+    def start_Shotgun(self,count):
+        Action.bullet=[]
+        for i in range(count/2):
+            Action.bullet.append("live bullet")
+        
+        for i in range(count-count/2): 
+            Action.bullet.append("dummy bullet")
+
     def Shotgun(self,Shotgun_Bool,target): #각각 live bullet일시 hp다운 시스템 및 총알은 index -1빠지도록
         if Shotgun_Bool==0:
             if self.bullet[-1]=="live bullet":
