@@ -4,6 +4,7 @@ import lsj_r
 
 class Action:
     bullet=[]#'live bullet' or '공포탄' 
+    aicount=[0,0]
 
     def __init__(self,hp_max):
         self.hp_max=hp_max
@@ -36,21 +37,31 @@ class Action:
     
     def start_Shotgun(self,count):
         Action.bullet=[]
-        for i in range(count/2):
+        Action.aicount=[0,0]
+        live=int(count/2)
+        for i in range(live):
             Action.bullet.append("live bullet")
         
-        for i in range(count-count/2): 
+        dummy=int(count-live)
+        for i in range(dummy): 
             Action.bullet.append("dummy bullet")
+        Action.aicount[0]= live
+        Action.aicount[1]= dummy
 
     def Shotgun(self,Shotgun_Bool,target): #각각 live bullet일시 hp다운 시스템 및 총알은 index -1빠지도록
         if Shotgun_Bool==0:
             if self.bullet[-1]=="live bullet":
                 self.hp -= self.shotgun_hp
+                Action.aicount[0]-=1
             else:
                 self.turn_bool[0]=0
+                Action.aicount[1]-=1
         else:
             if self.bullet[-1]== "live bullet":
                 target.hp -= self.shotgun_hp
+                Action.aicount[0]-=1
+            else:
+                Action.aicount[1]-=1
 
         if self.shotgun_hp==2:
             self.shotgun_hp=1
@@ -66,7 +77,12 @@ class Action:
     def Beer(self,inven_index,ad=0): #탄약 목록에 가장 마지막값를 반환하며 삭제합니다.
         if ad == 0:
             self.inven[inven_index]=0
-        return self.bullet.pop()
+        beer_count=self.bullet.pop()
+        if beer_count =="live bullet":
+            Action.aicount[0]-=1
+        else:
+            Action.aicount[1]-=1
+        return beer_count
 
     def Magnifying_Glass(self,inven_index,ad=0):#탄약 목록의 가장 마지막값을 반환합니다.
         if ad == 0:
@@ -74,7 +90,7 @@ class Action:
         return self.bullet[-1]
 
     def Cigarette_Pack(self,inven_index,ad=0):#hp+1를 합니다.
-        if self.hp_max==self.hp:
+        if self.hp_max > self.hp:
             self.hp+=1
         if ad == 0:
             self.inven[inven_index]=0
@@ -99,8 +115,12 @@ class Action:
         if ad ==0:
             self.inven[inven_index]=0
         if self.bullet[-1]=="live bullet":
+            Action.aicount[0]-=1
+            Action.aicount[1]+=1
             self.bullet[-1]="dummy bullet"
         else:
+            Action.aicount[0]+=1
+            Action.aicount[1]-=1
             self.bullet[-1]="live bullet"
 
     def Expired_Medicine(self,inven_index,ad=0):#각 50%확률로 2칸 올리기 or 한칸 소모
@@ -123,27 +143,29 @@ class Action:
         target.inven[target_index]=0
         return result
 #메인에서 ai용 카운트하는 변수 만들어서 사용
-#ai_count=[실탄 수,공포탄 수]
+#Action.aicount=[실탄 수,공포탄 수]
 #ing_bullet = 알수없음 0, 실탄 1 공포탄 2
 #유저와 ai 객체 명 각각 user, ai
-def ai_turn(ai_class,ai_count,target,ing_bullet=0):
+def ai_turn(ai_class,target,ing_bullet=0):
     ret_list=[]
-    end_bool=0
     while 1:
+        end_bool=0
+
         #1단계 킬각확인
-        if (ai_count[1]==0 or ing_bullet==1) and (target.hp== 1): #객체를 넣어 바로 상호작용을 하고 미리 데이터 처리를 한후 후 애니메이션을 사용함
+        if (Action.aicount[1]==0 or ing_bullet==1) and (target.hp== 1): #객체를 넣어 바로 상호작용을 하고 미리 데이터 처리를 한후 후 애니메이션을 사용함
             ret_list.append("총1")
             ret_list.append(ai_class.Shotgun(1,target))
             return ret_list
-        if (ai_count[1]==0 or ing_bullet==1) and (target.hp==2 and "Hand_Saw" in ai_class.inven):
+        if (Action.aicount[1]==0 or ing_bullet==1) and (target.hp==2 and "Hand_Saw" in ai_class.inven):
             inven_index=ai_class.inven.index("Hand_Saw")
             ret_list.append("톱"+str(inven_index))
             ret_list.append(ai_class.Hand_Saw(inven_index))
             ret_list.append("총1")
             ret_list.append(ai_class.Shotgun(1,target))
             return ret_list
+        
         #2단계 HP올리기
-        if ai_class.hp_max<ai_class.hp:
+        if ai_class.hp_max > ai_class.hp:
             if "Cigarette_Pack" in ai_class.inven:
                 inven_index=ai_class.inven.index("Cigarette_Pack")
                 ret_list.append("담"+str(inven_index))
@@ -166,6 +188,7 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                 ret_list.append("아약"+str(target_inven_index)+str(inven_index))
                 ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
                 end_bool=1
+                
         #3단계 변수차단
         if ai_class.turn_bool[1]==0:
             if "Handcuffs" in ai_class.inven:
@@ -179,6 +202,7 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                 ret_list.append("아수"+str(target_inven_index)+str(inven_index))
                 ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
                 end_bool=1
+
         #4단계 정보수집 여기에서 정보 수집 사항 제어 변수 추가 해야함.
         if ing_bullet == 0:
             if "Burner_Phone" in ai_class.inven:
@@ -192,17 +216,28 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                 ret_list.append("아대"+str(target_inven_index)+str(inven_index))
                 ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
                 end_bool=1
-            if "Magnifying_Glass" in ai_class.inven:
+            elif "Magnifying_Glass" in ai_class.inven:
                 inven_index=ai_class.inven.index("Magnifying_Glass")
                 ret_list.append("돋"+str(inven_index))
-                ret_list.append(ai_class.Magnifying_Glass(inven_index))
+                ing=ai_class.Magnifying_Glass(inven_index)
+                if ing == "live bullet":
+                    ing_bullet=1
+                else:
+                    ing_bullet=2
+                ret_list.append(ing)
                 end_bool=1
             elif "Adrenaline" in ai_class.inven and "Magnifying_Glass" in target.inven:
                 target_inven_index=target.inven.index("Magnifying_Glass")
                 inven_index=ai_class.inven.index("Adrenaline")
                 ret_list.append("아돋"+str(target_inven_index)+str(inven_index))
-                ret_list.append(ai_class.Adrenaline(inven_index,target,target_inven_index))
+                ing=ai_class.Adrenaline(inven_index,target,target_inven_index)
+                if ing == "live bullet":
+                    ing_bullet=1
+                else:
+                    ing_bullet=2
+                ret_list.append(ing)
                 end_bool=1
+
         #5단계 탄 조작
         if ing_bullet == 2:
             if "Inverter" in ai_class.inven:
@@ -210,11 +245,14 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                 ret_list.append("인"+str(inven_index))
                 ret_list.append(ai_class.Inverter(inven_index))
                 end_bool=1
+                ing_bullet=1
             elif "Beer" in ai_class.inven:
                 inven_index=ai_class.inven.index("Beer")
                 ret_list.append("맥"+str(inven_index))
                 ret_list.append(ai_class.Beer(inven_index))
                 end_bool=1
+                ing_bullet=0
+
         #최종 단계!! 확률 싸움
         if ing_bullet != 0 or end_bool==0:
             if ing_bullet == 1:
@@ -222,16 +260,17 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                 ret_list.append(ai_class.Shotgun(1,target))
                 return ret_list
             elif ing_bullet == 2:
-                ret_list.append("총1")
+                ret_list.append("총0")
                 ret_list.append(ai_class.Shotgun(0,target))
-            elif ai_count[0] > ai_count[1]:
+                ing_bullet=0
+            elif Action.aicount[0] > Action.aicount[1]:
                 ret_list.append("총1")
                 bullet_bool=ai_class.Shotgun(1,target)
                 ret_list.append(bullet_bool)
                 if bullet_bool=="live bullet":
                     return ret_list
-            elif ai_count[0] < ai_count[1]:
-                ret_list.append("총1")
+            elif Action.aicount[0] < Action.aicount[1]:
+                ret_list.append("총0")
                 bullet_bool=ai_class.Shotgun(0,target)
                 ret_list.append(bullet_bool)
                 if bullet_bool=="live bullet":
@@ -244,8 +283,10 @@ def ai_turn(ai_class,ai_count,target,ing_bullet=0):
                     if bullet_bool=="live bullet":
                         return ret_list
                 else:
-                    ret_list.append("총1")
+                    ret_list.append("총0")
                     bullet_bool=ai_class.Shotgun(0,target)
                     ret_list.append(bullet_bool)
                     if bullet_bool=="live bullet":
                         return ret_list
+                    else:
+                        ing_bullet=0
