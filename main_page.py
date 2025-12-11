@@ -1117,12 +1117,9 @@ MY_TOP_LEFT_IMG = "Myturn_btn_imgs/Mytopleft.png"
 MY_TOP_RIGHT_IMG = "Myturn_btn_imgs/Mytopright.png"
 MY_TOP_THREE_IMG = "Myturn_btn_imgs/Mytopthree.png"
 MY_TOP_TWO_IMG = "Myturn_btn_imgs/Mytoptwo.png"
+
 class BoxItemSystem:
-    def __init__(self, screen_width, screen_height):
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-        self.screen_width_half = screen_width // 2
-        self.screen_height_half = screen_height // 2
+    def __init__(self):
         
         self.state = "idle"
         
@@ -1137,7 +1134,7 @@ class BoxItemSystem:
         # 페이드 인 변수
         self.fade_image = None
         self.fade_alpha = 0
-        self.fade_speed = 5
+        self.fade_speed = 20
         self.fade_pos = None
         self.current_img_pos = 0
         
@@ -1164,7 +1161,7 @@ class BoxItemSystem:
         self.fade_alpha = 0
         self.current_img_pos = 1 if is_right_side else 0
         
-        rect = self.fade_image.get_rect(center=(self.screen_width_half, self.screen_height_half))
+        rect = self.fade_image.get_rect(center=(screen_width_half, screen_height_half))
         if self.current_img_pos:
             self.fade_pos = rect.bottomright
         else:
@@ -1177,10 +1174,11 @@ class BoxItemSystem:
         self.buttons = []
         # enumerate를 사용하여 인덱스(i)를 같이 가져옵니다.
         for i, (is_top, img, x_ratio, y_ratio, w_ratio, h_ratio) in enumerate(button_data):
-            x = int(x_ratio * self.screen_width)
-            y = int(y_ratio * self.screen_height)
-            w = int(w_ratio * self.screen_width)
-            h = int(h_ratio * self.screen_height)
+            x = int(x_ratio * screen_width)
+            y = int(y_ratio * screen_height)
+            w = int(w_ratio * screen_width)
+            h = int(h_ratio * screen_height)
+            img.set_alpha(0)
             
             scaled_img = pygame.transform.scale(img, (w, h))
             
@@ -1304,16 +1302,17 @@ class BoxItemSystem:
 
     def draw(self, surface, box_view_img, open_box_img):
         # 1. 배경 박스
-        view_rect = box_view_img.get_rect(center=(self.screen_width_half, self.screen_height_half))
+        view_rect = box_view_img.get_rect(center=(screen_width_half, screen_height_half))
         surface.blit(box_view_img, view_rect)
         
-        box_img = pygame.transform.scale(open_box_img, (int(self.screen_width*0.3236), int(self.screen_height*0.3917)))
-        box_rect = box_img.get_rect(topleft=(int(self.screen_width*0.3419), int(self.screen_height*0.4356)))
+        box_img = pygame.transform.scale(open_box_img, (int(screen_width*0.3236), int(screen_height*0.3917)))
+        box_rect = box_img.get_rect(topleft=(int(screen_width*0.3419), int(screen_height*0.4356)))
         surface.blit(box_img, box_rect)
 
         # 2. 빈 버튼(슬롯) 그리기
         if self.state in ["button_select", "item_moving", "item_fade_in", "idle", "item_complete"]: 
             for btn in self.buttons:
+                btn['image'].set_alpha(0)
                 surface.blit(btn['image'], btn['rect'])
                 
                 # (선택 사항) 이미 찬 슬롯은 어둡게 표시하거나 X 표시를 하고 싶다면 여기서 btn['index'] in self.occupied_indices 체크
@@ -1391,14 +1390,14 @@ def box_item(box_system, user, ai, mouse_pos):
         box_system.state = "idle" # 테스트용: 다시 아이템 나오게 하기
     
 myturn_btn_img = [
-    [1,pygame.image.load(MY_BTTM_LEFT_IMG), 0.0615, 0.6928, 0.1316, 0.1606],
-    [0,pygame.image.load(MY_BTTM_RIGHT_IMG), 0.9455, 0.6939, 0.1288, 0.1622],
-    [0,pygame.image.load(MY_BTTM_THREE_IMG), 0.7990, 0.6928, 0.1069, 0.1594],
-    [1,pygame.image.load(MY_BTTM_TWO_IMG), 0.2097, 0.6917, 0.1087, 0.1622],
-    [1,pygame.image.load(MY_TOP_LEFT_IMG),0.1656, 0.3200, 0.0931, 0.0978],
-    [0,pygame.image.load(MY_TOP_RIGHT_IMG), 0.8441, 0.3211, 0.0931, 0.0983],
-    [0,pygame.image.load(MY_TOP_THREE_IMG), 0.7316, 0.3233, 0.0774, 0.0978],
-    [1,pygame.image.load(MY_TOP_TWO_IMG), 0.2799, 0.3222, 0.0788, 0.0994],
+    [1,pygame.image.load(MY_BTTM_LEFT_IMG), 0.0611, 0.6928, 0.2115, 0.3600],
+    [0,pygame.image.load(MY_BTTM_RIGHT_IMG), 0.9465, 0.6906, 0.2063, 0.3561],
+    [0,pygame.image.load(MY_BTTM_THREE_IMG), 0.8000, 0.6894, 0.1715, 0.3533],
+    [1,pygame.image.load(MY_BTTM_TWO_IMG), 0.2087, 0.6922, 0.1753, 0.3589],
+    [1,pygame.image.load(MY_TOP_LEFT_IMG),0.1674, 0.3239, 0.1483, 0.2200],
+    [0,pygame.image.load(MY_TOP_RIGHT_IMG), 0.8438, 0.3228, 0.1479, 0.2161],
+    [0,pygame.image.load(MY_TOP_THREE_IMG),0.7316, 0.3239, 0.1260, 0.2200],
+    [1,pygame.image.load(MY_TOP_TWO_IMG), 0.2802, 0.3239, 0.1264, 0.2178],
 ]
 
 width = 600
@@ -1425,7 +1424,7 @@ box_system = None
 # --- 메인 게임 루프 ---
 def main():
     global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick, box_system
-    box_system = BoxItemSystem(screen_width, screen_height)
+    box_system = BoxItemSystem()
     running = True
     while running:
         mouse_pos = pygame.mouse.get_pos()
@@ -1487,7 +1486,7 @@ def main():
                     state = 'Complete_sign_onClick'
                 elif state == 'box_pre' and closeBox_btn.check_for_input(mouse_pos):
                     inGame_tick = 0
-                    maxHp=lsj_r.rint(2,4) 
+                    maxHp=lsj_r.rint(2,4)
                     user=B_def.Action(maxHp)
                     ai=B_def.Action(maxHp)
                     mouse_cursor_arrow()
