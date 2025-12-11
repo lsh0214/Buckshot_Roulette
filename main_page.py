@@ -1366,14 +1366,16 @@ def box_item(box_system, user, ai, mouse_pos):
             test_item = pygame.image.load(MY_PHONE_IMG).convert_alpha()
         elif current == "Inverter":
             test_item = pygame.image.load(MY_INVERTER_IMG).convert_alpha()
-        elif current == "BeeExpired_Mediciner":
+        elif current == "Expired_Medicine":
             test_item = pygame.image.load(MY_PILL_IMG).convert_alpha()
         elif current == "Adrenaline":
             test_item = pygame.image.load(MY_ADRENALINE_IMG).convert_alpha()
-
-    test_item = pygame.transform.scale(test_item, (int(screen_width*0.15), int(screen_height*0.15)))
+        
+        if test_item is not None:
+            # 크기 변환 및 시퀀스 시작을 조건문 안으로 이동
+            test_item = pygame.transform.scale(test_item, (int(screen_width*0.15), int(screen_height*0.15)))
+            box_system.start_item_sequence(test_item, myturn_btn_img, is_right_side=False)
     
-    box_system.start_item_sequence(test_item, myturn_btn_img, is_right_side=False)
     box_system.check_hover(mouse_pos)
 
     # 2. 시스템 업데이트 및 그리기
