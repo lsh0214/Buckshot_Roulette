@@ -928,6 +928,9 @@ def moniter_zoomIn(zoom_img, current_black_moniter_img, current_moniter_1_img, c
                 rect = current_moniter_2_img.get_rect()
                 rect.center = (screen_width_half, screen_height_half)
                 screen.blit(current_moniter_2_img, rect)
+                if damage_manager is not None:
+                    # 실제 플레이어/딜러 데미지 값을 넣으세요 (예: 1, 2)
+                    damage_manager.draw_health_boxes(screen, 0, 0)
             else:
                 rect = current_moniter_1_img.get_rect()
                 rect.center = (screen_width_half, screen_height_half)
@@ -946,6 +949,9 @@ def moniter_zoomIn(zoom_img, current_black_moniter_img, current_moniter_1_img, c
             rect = current_moniter_2_img.get_rect()
             rect.center = (screen_width_half, screen_height_half)
             screen.blit(current_moniter_2_img, rect)
+            # ★ 상자 1, 2 그리기 ★
+            if damage_manager is not None:
+                damage_manager.draw_health_boxes(screen, 0, 0 )
         else:
             score_tick = 10
             global inGame_tick 
@@ -1513,14 +1519,152 @@ def bullet_open():
         state = 'moniter_zoomIn_bullet'
         score_tick = 0 # 다음 함수를 위해 타이머 초기화
         moniter_zoomIn(gameroom_table_img, moniter_img, HEARTBAR_MONITER_IMG, HEARTBAR_MONITER_FULL_img, False)
-        
-def dealer_bulleting():
-    global screen, state
-    base_img = pygame.transform.scale(gameroom_table_img, (screen_width, screen_height))
-    rect = base_img.get_rect()
-    rect.center = (screen_width_half, screen_height_half)
+
+class DamageBoxManager:
+    def __init__(self, screen_width, screen_height):
+        self.w = screen_width
+        self.h = screen_height
+
+        # --- [Box 1] 오른쪽 고정, 왼쪽 확장 (체력 바) ---
+        self.S1_ANCHOR_TR = (0.376042, 0.400556)
+        self.S1_ANCHOR_BR = (0.371875, 0.491667)
+        self.DELTA_S1 = (-0.027083, -0.016667)
+
+        # --- [Box 2] 왼쪽 고정, 오른쪽 확장 (체력 바) ---
+        self.S2_ANCHOR_TL = (0.493750, 0.462778)
+        self.S2_ANCHOR_BL = (0.480208, 0.569444)
+        self.DELTA_S2 = (0.044792, 0.026111)
+
+        # --- [Box 3] 오른쪽 고정, 왼쪽 확장 (총알 뷰 - 2/3 적용) ---
+        self.S3_ANCHOR_TR = (0.730903, 0.106333)
+        self.S3_ANCHOR_BR = (0.714931, 0.168778)
+        self.DELTA_S3 = (-0.012722, -0.006667)
+
+        # --- [Box 4] 왼쪽 고정, 오른쪽 확장 (총알 뷰 - 2/3 적용) ---
+        self.S4_ANCHOR_TL = (0.786806, 0.156667)
+        self.S4_ANCHOR_BL = (0.772222, 0.211556)
+        self.DELTA_S4 = (0.017204, 0.011111)
+
+    # ... (update_resolution, _get_polygon_points, _rotate_polygon 함수는 기존과 동일) ...
+    def update_resolution(self, width, height):
+        self.w = width
+        self.h = height
+
+    def _get_polygon_points(self, anchor_top, anchor_bottom, delta, damage, direction):
+        if damage <= 0: return None
+        dx, dy = delta
+        w, h = self.w, self.h
+        anchor_t_x, anchor_t_y = int(anchor_top[0] * w), int(anchor_top[1] * h)
+        anchor_b_x, anchor_b_y = int(anchor_bottom[0] * w), int(anchor_bottom[1] * h)
+        move_x, move_y = dx * damage, dy * damage
+        moving_t_x, moving_t_y = int((anchor_top[0] + move_x) * w), int((anchor_top[1] + move_y) * h)
+        moving_b_x, moving_b_y = int((anchor_bottom[0] + move_x) * w), int((anchor_bottom[1] + move_y) * h)
+
+        if direction == 'left_expand':
+            return [(moving_t_x, moving_t_y), (anchor_t_x, anchor_t_y), (anchor_b_x, anchor_b_y), (moving_b_x, moving_b_y)]
+        elif direction == 'right_expand':
+            return [(anchor_t_x, anchor_t_y), (moving_t_x, moving_t_y), (moving_b_x, moving_b_y), (anchor_b_x, anchor_b_y)]
+        return None
+
+    def _rotate_polygon(self, polygon, angle_degree):
+        # ... (기존 회전 로직 동일) ...
+        if not polygon: return None
+        cx = sum(p[0] for p in polygon) / len(polygon)
+        cy = sum(p[1] for p in polygon) / len(polygon)
+        rad = math.radians(angle_degree)
+        cos_theta, sin_theta = math.cos(rad), math.sin(rad)
+        rotated_poly = []
+        for x, y in polygon:
+            rel_x, rel_y = x - cx, y - cy
+            rot_x = rel_x * cos_theta - rel_y * sin_theta
+            rot_y = rel_x * sin_theta + rel_y * cos_theta
+            rotated_poly.append((rot_x + cx, rot_y + cy))
+        return rotated_poly
+
+    # --- [NEW] 모니터별 그리기 함수 분리 ---
+
+    def draw_health_boxes(self, screen, dmg1, dmg2, color=(0, 0, 0)):
+        """
+        [HEARTBAR_MONITER_FULL_IMG] 화면용
+        상자 1, 2만 그립니다.
+        """
+        polygons = []
+        # Box 1
+        p1 = self._get_polygon_points(self.S1_ANCHOR_TR, self.S1_ANCHOR_BR, self.DELTA_S1, dmg1, 'left_expand')
+        if p1: polygons.append(p1)
+        # Box 2
+        p2 = self._get_polygon_points(self.S2_ANCHOR_TL, self.S2_ANCHOR_BL, self.DELTA_S2, dmg2, 'right_expand')
+        if p2: polygons.append(p2)
+
+        for poly in polygons:
+            pygame.draw.polygon(screen, color, poly)
+
+    def draw_bullet_boxes(self, screen, dmg3, dmg4, color=(0, 0, 0)):
+        """
+        [BULLET_OPEN_VIEW_IMG] 화면용
+        상자 3, 4만 그립니다. (회전 적용)
+        """
+        polygons = []
+        # Box 3 (5도 회전)
+        p3 = self._get_polygon_points(self.S3_ANCHOR_TR, self.S3_ANCHOR_BR, self.DELTA_S3, dmg3, 'left_expand')
+        if p3: polygons.append(self._rotate_polygon(p3, 5))
+        # Box 4 (5도 회전)
+        p4 = self._get_polygon_points(self.S4_ANCHOR_TL, self.S4_ANCHOR_BL, self.DELTA_S4, dmg4, 'right_expand')
+        if p4: polygons.append(self._rotate_polygon(p4, 5))
+
+        for poly in polygons:
+            pygame.draw.polygon(screen, color, poly)
+
+
+def heart_damage_box(dmg_one, dmg_two):
+    """
+    매개변수로 받은 dmg_one, dmg_two를 이용해 그리기
+    """
+    # 다각형 좌표 가져오기
+    p1, p2 = (screen_width, screen_height, dmg_one, dmg_two)
+    
+    # 좌표가 있으면 그리기 (각각 독립적으로 체크)
+    if p1:
+        pygame.draw.polygon(screen, BLACK, p1)
+    if p2:
+        pygame.draw.polygon(screen, BLACK, p2)
+
+# def built_heart_box(surface, ratios, damage):
+#     """
+#     현재 화면 크기에 맞춰 비율대로 다각형을 그리는 함수
+#     """
+#     w, h = surface.get_size() # 현재 화면의 너비와 높이 가져오기
+    
+#     # 비율을 실제 픽셀 좌표로 변환
+#     points = []
+#     for r_x, r_y in ratios:
+#         pixel_x = int(r_x * w) - (damage*w)
+#         pixel_y = int(r_y * h)
+#         points.append((pixel_x, pixel_y))
+    
+#     # 다각형 그리기
+#     pygame.draw.polygon(surface, BLACK, points)
+
+def dealer_bulleting(base_img):
+    global screen, state, damage_manager # 전역 damage_manager 사용
+    
+    base_img = pygame.transform.scale(base_img, (screen_width, screen_height))
+    rect = base_img.get_rect(center=(screen_width_half, screen_height_half))
     screen.blit(base_img, rect)
-    return
+    if base_img == BULLET_OPEN_VIEW_IMG and damage_manager is not None:
+        current_dmg_3 = 3
+        current_dmg_4 = 4
+        damage_manager.draw_bullet_boxes(screen, current_dmg_3, current_dmg_4)
+    elif base_img == HEARTBAR_MONITER_FULL_IMG and damage_manager is not None:
+        current_dmg_1 = 3
+        current_dmg_2 = 4
+        damage_manager.draw_bullet_boxes(screen, current_dmg_1, current_dmg_2)
+    # elif base_img == GAMEROOM_TABLE_IMG and damage_manager is not None: 이거 준서가 보내주면 해야함. 일단 지금은 저장한 후
+        
+    #     current_dmg_1 = 5
+    #     current_dmg_2 = 6
+    #     damage_manager.draw_bullet_boxes(screen, current_dmg_5, current_dmg_6)
+
 def Adrenaline():
     return
 def Glasses():
@@ -1539,11 +1683,13 @@ def inverter():
     return
 
 box_system = None
+damage_manager = None
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick, box_system
+    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick, box_system, damage_manager
     box_system = BoxItemSystem()
+    damage_manager = DamageBoxManager(screen_width, screen_height)
     running = True
     while running:
         mouse_pos = pygame.mouse.get_pos()
@@ -1567,6 +1713,8 @@ def main():
                     state = 'complete_sign'
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_1:
                 state = 'bullet_open'
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+                state = 'dealer_bulleting'
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
@@ -1662,7 +1810,7 @@ def main():
             bullet_zoomOut()
             
         elif state == 'dealer_bulleting':
-            dealer_bulleting()
+            dealer_bulleting(GAMEROOM_TABLE_IMG)
         pygame.display.update()
         TIME.tick(60)
 
