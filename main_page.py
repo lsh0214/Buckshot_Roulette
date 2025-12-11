@@ -996,10 +996,10 @@ def box_pre(mouse_pos):
             closeBox_btn.check_for_hover(mouse_pos)
             closeBox_btn.update(screen) 
     inGame_tick+=1
-
+bool_num = 0
 open_box_btn = Button(open_box_img, int(screen_width*0.3236), int(screen_height*0.3917))
-def box_open(mouse_pos):
-    global screen, inGame_tick
+def box_open(mouse_pos, user):
+    global screen, inGame_tick, bool_num
     rect = box_view_img.get_rect()
     rect.center = (screen_width_half, screen_height_half)
     screen.blit(box_view_img, rect)
@@ -1019,149 +1019,14 @@ def box_open(mouse_pos):
         open_box_btn.btn_rect = open_box_btn.image_btn.get_rect(topleft=(int(screen_width*0.3419), int(screen_height*0.4356)))
         # 버튼 그리기
         open_box_btn.check_for_hover(mouse_pos)
-        open_box_btn.update(screen) 
-        # rect = open_box_img.get_rect()
-        # rect.topleft = (int(screen_width*0.3419), int(screen_height*0.4356))
-        # screen.blit(open_box_img, rect)
+        open_box_btn.update(screen)
     inGame_tick+=1
 
-u=B_def.Action(2)
-list(u.inven_list)
-ITEM = ['adre', 'glass', 'beer', 'pill', 'saw', 'ciga', 'phone', 'inverter']
-
-item_index = 0
-
-class item_btn:
-    global screen
-    def __init__(self, image, width, height, x_pos, y_pos):
-        self.image = pygame.image.load(image).convert_alpha()
-        self.scale_img = pygame.transform.scale(self.image, (width, height))
-        self.x_pos = x_pos
-        self.y_pos = y_pos
-
-        self.rect = self.image.get_rect(topleft = (x_pos,y_pos))
-        self.disapear = None
-        self.moveing = False
-        self.change_pos = None
-        self.speed = 5
-
-        self.class_timer = 0
-    def item_hidding(self):
-        if self.disapear == False:
-            return
-        for opacity in range(255,0,-5):
-            self.image.set_alpha(opacity)
-            screen.blit(self.image, self.rect)
-            pygame.display.update()
-            pygame.time.delay(20)
-        self.disapear = False
-    def item_showing(self):
-        if self.disapear == True:
-            return
-        for opacity in range(0,255,5):
-            self.image.set_alpha(opacity)
-            screen.blit(self.image, self.rect)
-            pygame.display.update()
-            pygame.time.delay(20)
-        self.disapear = True
-    def target_moving(self, target_x, target_y):
-        zoom_factor = 1.0 - self.class_timer * 0.05  # 확대 속도를 확 늘림 아래 2줄까지 AI
-        self.width = int(screen_width * zoom_factor)
-        self.height = int(screen_height * zoom_factor)
-        scaled_current = pygame.transform.scale(self.image, (self.width, self.height))
-        self.rect = scaled_current.get_rect()
-        self.rect.bottomright = (target_x, target_y)
-        target_pos = pygame.math.Vector2(target_x, target_y)
-        if self.moveing:
-            current_pos = pygame.math.Vector2(self.rect.bottomright)
-            direction = target_pos - current_pos
-            # 거리가 속도보다 짧으면 도착 처리
-            if direction.length() <= self.speed:
-                self.rect.topleft = target_pos
-                self.moving = False
-            else:
-                # 방향 정규화 후 속도만큼 이동
-                direction.normalize_ip()
-                move_vector = direction * self.speed
-                self.rect.x += move_vector.x
-                self.rect.y += move_vector.y
-            screen.blit(self.image, self.rect)
-        else:
-            print("도착완료.")
-        self.class_timer += 1
-
-class ItemManager:
-    def __init__(self, current_state):
-        self.sw = screen_width
-        self.sh = screen_height
-        self.items = [] # 생성된 Button 객체들을 담을 리스트
-        if current_state == 'select_items':
-            # --- 왼쪽 그룹 (Left) 생성 ---
-            self.add_item("Myturen_btn_imgs/Mytopleft.png", 477, 576, 268, 176)
-            self.add_item("Myturen_btn_imgs/Mytoptwo.png", 806, 580, 227, 179)
-            self.add_item("Myturen_btn_imgs/Mybttmleft.png", 177, 1247, 379, 289)
-            self.add_item("Myturen_btn_imgs/Mybttmtwo.png", 604, 1245, 313, 292)
-
-            # --- 오른쪽 그룹 (Right) 생성 ---
-            self.add_item("Myturen_btn_imgs/Mytopthree.png", 2107, 582, 223, 176)
-            self.add_item("Myturen_btn_imgs/Mytopright.png", 2431, 578, 268, 177)
-            self.add_item("Myturen_btn_imgs/Mybttmthree.png", 2301, 1247, 308, 287)
-            self.add_item("Myturen_btn_imgs/Mybttmright.png", 2723, 1249, 371, 292)
-
-    def get_scaled_props(self, x, y, w, h):
-        """ 비율 계산 함수 """
-        target_x = int(self.sw * (x / 2880))
-        target_y = int(self.sh * (y / 1800))
-        target_w = int(self.sw * (w / 2880))
-        target_h = int(self.sh * (h / 1800))
-        return target_w, target_h, target_x, target_y
-
-    def add_item(self, img_path, x, y, w, h):
-        """ 이미지 로드 -> 스케일링 -> Button 객체 생성 -> 리스트 추가 """
-        # 1. 비율 계산
-        tw, th, tx, ty = self.get_scaled_props(x, y, w, h)
-        
-        # 2. 이미지 로드 및 리사이징
-        try:
-            raw_img = pygame.image.load(img_path).convert_alpha()
-            scaled_img = pygame.transform.scale(raw_img, (tw, th))
-            
-            # 3. Button 객체 생성 (Button 클래스는 이미지를 인자로 받음)
-            # 주의: Button 클래스는 좌표를 center로 사용합니다.
-            # 만약 입력한 좌표(x,y)가 Top-Left 기준이라면 위치 조정이 필요할 수 있습니다.
-            # 여기서는 입력 좌표를 그대로 Button의 x, y로 넘깁니다.
-            btn = Button(image_btn=scaled_img, x=tx, y=ty)
-            
-            self.items.append(btn)
-        except Exception as e:
-            print(f"이미지 로드 실패 ({img_path}): {e}")
-
-    def update_all(self, screen):
-        """ 모든 아이템 화면에 그리기 """
-        for item in self.items:
-            item.update(screen)
-
-    def check_hover_all(self):
-        """ 모든 아이템 호버 체크 """
-        mouse_pos = pygame.mouse.get_pos()
-        for item in self.items:
-            item.check_for_hover(mouse_pos)
-
-    def check_click_all(self, event):
-        """ 클릭 이벤트 처리 (메인 루프의 event 처리 부분에서 호출) """
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = pygame.mouse.get_pos()
-            for index, item in enumerate(self.items):
-                if item.check_for_input(mouse_pos):
-                    print(f"{index}번 아이템 클릭됨")
-                    return index # 클릭된 아이템의 인덱스 반환
-        return None
 # --- 2. 비율 상수 정의 (원근감 적용) ---
 
 # ==================================
 # inGame_imgs 디렉토리 내 이미지 파일
 # ==================================
-
 AFTER_SAW_IMG = "inGame_imgs/after_saw.png"
 AI_FAKE_BULLET_IMG = "inGame_imgs/AIFakebullet.png"
 AI_REAL_BULLET_IMG = "inGame_imgs/AIRealbullet.png"
@@ -1207,7 +1072,6 @@ AI_SAW_IMG = "AIitem_imgs/AIsaw.png"
 # ==================================
 # Myitem_imgs 디렉토리 내 이미지 파일
 # ==================================
-
 MY_ADRENALINE_IMG = "Myitem_imgs/Myadrenaline.png"
 MY_BEER_IMG = "Myitem_imgs/Mybeer.png"
 MY_CIGARETTE_IMG = "Myitem_imgs/Mycigarette.png"
@@ -1218,21 +1082,19 @@ MY_PHONE_IMG = "Myitem_imgs/Myphone.png"
 MY_PILL_IMG = "Myitem_imgs/Mypill.png"
 MY_SAW_IMG = "Myitem_imgs/Mysaw.png"
 # ==================================
-# Alturn_btn_imgs 디렉토리 내 이미지 파일
+# AIturn_btn_imgs 디렉토리 내 이미지 파일
 # ==================================
-
-AL_BTTM_LEFT_IMG = "Alturn_btn_imgs/Albttmleft.png"
-AL_BTTM_THREE_IMG = "Alturn_btn_imgs/Albttmthree.png"
-AL_BTTM_TWO_IMG = "Alturn_btn_imgs/Albttmtwo.png"
-AL_BTTM_RIGHT_IMG = "Alturn_btn_imgs/Albttmright.png"
-AL_TOP_LEFT_IMG = "Alturn_btn_imgs/Altopleft.png"
-AL_TOP_RIGHT_IMG = "Alturn_btn_imgs/Altopright.png"
-AL_TOP_THREE_IMG = "Alturn_btn_imgs/Altopthree.png"
-AL_TOP_TWO_IMG = "Alturn_btn_imgs/Altoptwo.png"
+AI_BTTM_LEFT_IMG = "AIturn_btn_imgs/AIbttmleft.png"
+AI_BTTM_THREE_IMG = "AIturn_btn_imgs/AIbttmthree.png"
+AI_BTTM_TWO_IMG = "AIturn_btn_imgs/AIbttmtwo.png"
+AI_BTTM_RIGHT_IMG = "AIturn_btn_imgs/AIbttmright.png"
+AI_TOP_LEFT_IMG = "AIturn_btn_imgs/AItopleft.png"
+AI_TOP_RIGHT_IMG = "AIturn_btn_imgs/AItopright.png"
+AI_TOP_THREE_IMG = "AIturn_btn_imgs/AItopthree.png"
+AI_TOP_TWO_IMG = "AIturn_btn_imgs/AItoptwo.png"
 # ==================================
 # dealer_imgs 디렉토리 내 이미지 파일
 # ==================================
-
 DEALER_BULLETING_IMG = "dealer_imgs/dealer_bulleting.png"
 DEALER_HANDCUFFS_IMG = "dealer_imgs/dealer_handcuffs.png"
 DEALER_HURTED_FACE_IMG = "dealer_imgs/dealer_hurted_face.png"
@@ -1244,35 +1106,289 @@ DEALER_SHOT_ME_IMG = "dealer_imgs/dealer_shot_me.png"
 DEALER_SHOTGUN_IMG = "dealer_imgs/dealer_shotgun.png"
 DEALER_SHOTGUN_AFTER_IMG = "dealer_imgs/dealer_shotgun_after.png"
 DEALER_SHOTGUN_BEFORE_IMG = "dealer_imgs/dealer_shotgun_before.png"
-handcruffs = None
-tick = 0
-comback_bool = False
-def box_item(user, ai, mouse_pos):
-    global screen, tick, handcruffs, comback_bool
-    rect = box_view_img.get_rect()
-    rect.center = (screen_width_half, screen_height_half)
-    box_img = pygame.transform.scale(open_box_img, (int(screen_width*0.3236), int(screen_height*0.3917)))
-    box_rect = box_img.get_rect(topleft=(int(screen_width*0.3419), int(screen_height*0.4356)))
-    screen.blit(box_view_img, rect)
-    screen.blit(box_img, box_rect)
-    current_item = user.start_inven()
-    item_name = list(user.inven_list)
-    if current_item:
-        if item_name[0] == current_item: #수갑일 때
-            handcuffs = item_btn("Myitem_imgs/Myhandcuffs.png", 800, 800, screen_width_half, screen_height_half)
-            if comback_bool and handcuffs.disapear is True:
-                handcuffs.target_moving(0, 0)
-                handcuffs.item_hidding()
-            elif comback_bool!=True:
-                handcuffs.item_showing()
-            elif comback_bool and handcuffs.disapear is False:
-                item_name.pop(0)
-                tick = 0   
-                open_box_btn.btn_rect = open_box_btn.image_btn.get_rect(topleft=(int(screen_width*0.3419), int(screen_height*0.4356)))
-                # 버튼 그리기
-                open_box_btn.check_for_hover(mouse_pos)
-                open_box_btn.update(screen) 
-    return
+# ==================================
+# Myturen_btn_imgs 디렉토리 내 이미지 파일
+# ==================================
+MY_BTTM_LEFT_IMG = "Myturn_btn_imgs/Mybttmleft.png"
+MY_BTTM_RIGHT_IMG = "Myturn_btn_imgs/Mybttmright.png"
+MY_BTTM_THREE_IMG = "Myturn_btn_imgs/Mybttmthree.png"
+MY_BTTM_TWO_IMG = "Myturn_btn_imgs/Mybttmtwo.png"
+MY_TOP_LEFT_IMG = "Myturn_btn_imgs/Mytopleft.png"
+MY_TOP_RIGHT_IMG = "Myturn_btn_imgs/Mytopright.png"
+MY_TOP_THREE_IMG = "Myturn_btn_imgs/Mytopthree.png"
+MY_TOP_TWO_IMG = "Myturn_btn_imgs/Mytoptwo.png"
+class BoxItemSystem:
+    def __init__(self, screen_width, screen_height):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.screen_width_half = screen_width // 2
+        self.screen_height_half = screen_height // 2
+        
+        self.state = "idle"
+        
+        # --- [추가 1] 저장소 관리 ---
+        # 배치가 완료된 아이템들을 저장할 리스트
+        # 형식: {'index': 버튼인덱스, 'image': 이미지객체, 'rect': 위치좌표, 'item_name': 아이템이름(옵션)}
+        self.filled_slots = [] 
+        
+        # 이미 사용된 버튼의 인덱스를 저장하는 세트 (빠른 검색용)
+        self.occupied_indices = set()
+        
+        # 페이드 인 변수
+        self.fade_image = None
+        self.fade_alpha = 0
+        self.fade_speed = 5
+        self.fade_pos = None
+        self.current_img_pos = 0
+        
+        # 버튼 변수
+        self.buttons = []
+        self.target_btn_index = -1 # 현재 이동 목표가 된 버튼의 인덱스
+        
+        # 이동 모션 변수
+        self.moving_image = None
+        self.move_start_pos = None
+        self.move_target_pos = None
+        self.move_progress = 0
+        self.move_speed = 0.05
+
+    def start_item_sequence(self, item_image, button_data, is_right_side=False):
+        """아이템 획득 시퀀스 시작"""
+        # 이미 모든 칸이 꽉 찼는지 확인하는 로직이 필요하다면 여기에 추가
+        if len(self.filled_slots) >= len(button_data):
+            print("인벤토리가 가득 찼습니다!")
+            return
+
+        self.state = "item_fade_in"
+        self.fade_image = item_image
+        self.fade_alpha = 0
+        self.current_img_pos = 1 if is_right_side else 0
+        
+        rect = self.fade_image.get_rect(center=(self.screen_width_half, self.screen_height_half))
+        if self.current_img_pos:
+            self.fade_pos = rect.bottomright
+        else:
+            self.fade_pos = rect.bottomleft
+            
+        self.setup_buttons(button_data)
+    
+    def setup_buttons(self, button_data):
+        """버튼 설정 시 인덱스(ID) 부여"""
+        self.buttons = []
+        # enumerate를 사용하여 인덱스(i)를 같이 가져옵니다.
+        for i, (is_top, img, x_ratio, y_ratio, w_ratio, h_ratio) in enumerate(button_data):
+            x = int(x_ratio * self.screen_width)
+            y = int(y_ratio * self.screen_height)
+            w = int(w_ratio * self.screen_width)
+            h = int(h_ratio * self.screen_height)
+            
+            scaled_img = pygame.transform.scale(img, (w, h))
+            
+            if is_top:
+                rect = scaled_img.get_rect(bottomleft=(x, y))
+            else:
+                rect = scaled_img.get_rect(bottomright=(x, y))
+            
+            self.buttons.append({
+                'index': i,          # [중요] 버튼 고유 번호
+                'image': scaled_img,
+                'rect': rect,
+                'pos': rect.center,
+                'is_top': is_top
+            })
+    
+    def start_item_motion(self, target_pos, btn_index):
+        """이동 시작 시 목표 인덱스 저장"""
+        self.state = "item_moving"
+        self.target_btn_index = btn_index # [중요] 어디로 가는지 저장
+        
+        self.moving_image = self.fade_image.copy()
+        self.moving_image.set_alpha(255)
+        
+        if self.current_img_pos:
+            rect = self.moving_image.get_rect(bottomright=self.fade_pos)
+        else:
+            rect = self.moving_image.get_rect(bottomleft=self.fade_pos)
+        
+        self.move_start_pos = rect.center
+        self.move_target_pos = target_pos
+        self.move_progress = 0
+
+    def check_hover(self, mouse_pos):
+        """마우스가 빈 버튼 위에 있으면 커서 변경"""
+        
+        # 1. 버튼 선택 단계가 아니면 기본 커서로 돌리고 끝냄
+        if self.state != "button_select":
+            # 다른 곳에서 커서를 제어할 수도 있으니 여기서는 생략하거나 arrow로 초기화
+            # mouse_cursor_arrow() 
+            return
+
+        is_hovering_any = False
+
+        for btn in self.buttons:
+            # [중요] 이미 아이템이 찬 곳은 손가락 커서 안 뜨게 건너뜀
+            if btn['index'] in self.occupied_indices:
+                continue
+            
+            # 마우스가 버튼 영역 안에 들어왔는지 확인
+            if btn['rect'].collidepoint(mouse_pos):
+                is_hovering_any = True
+                break
+        
+        # 2. 하나라도 겹치면 손가락, 아니면 화살표
+        if is_hovering_any:
+            mouse_cursor_hand()
+        else:
+            mouse_cursor_arrow()
+
+    def handle_click(self, mouse_pos):
+        """클릭 처리: 이미 아이템이 있는 버튼은 무시"""
+        if self.state == "button_select":
+            for btn in self.buttons:
+                # [추가 2] 이미 점유된(occupied) 버튼이면 클릭 무시
+                if btn['index'] in self.occupied_indices:
+                    continue
+                
+                if btn['rect'].collidepoint(mouse_pos):
+                    # 버튼 위치와 '인덱스'를 넘겨줌
+                    self.start_item_motion(btn['pos'], btn['index'])
+                    return "item_button_clicked"
+        return None
+    
+    def update(self):
+        if self.state == "item_fade_in":
+            self.fade_alpha += self.fade_speed
+            if self.fade_alpha >= 255:
+                self.fade_alpha = 255
+                self.state = "button_select"
+        
+        elif self.state == "item_moving":
+            self.move_progress += self.move_speed
+            if self.move_progress >= 1:
+                self.move_progress = 1
+                
+                # [추가 3] 이동 완료 시 데이터 영구 저장
+                self.save_item_to_slot()
+                
+                self.state = "item_complete"
+                self.reset_for_next_item()
+
+    def save_item_to_slot(self):
+        """이동이 끝난 아이템을 리스트에 저장하고 자리를 차지함"""
+        # 최종 위치 계산
+        final_rect = self.moving_image.get_rect(center=self.move_target_pos)
+        
+        # 정보 저장
+        saved_data = {
+            'index': self.target_btn_index, # 어떤 버튼에 들어갔는지
+            'image': self.moving_image,     # 이미지 객체
+            'rect': final_rect              # 화면상 위치
+        }
+        self.filled_slots.append(saved_data)
+        
+        # 해당 인덱스 '사용 중' 처리
+        self.occupied_indices.add(self.target_btn_index)
+        
+        print(f"아이템 저장 완료: 슬롯 {self.target_btn_index}번")
+
+    def reset_for_next_item(self):
+        """다음 턴을 위해 초기화하되, filled_slots는 유지"""
+        self.state = "idle"
+        self.fade_image = None
+        self.moving_image = None
+        self.target_btn_index = -1
+    
+    def get_inventory_data(self):
+        """외부에서 현재 아이템 배치 상황을 가져갈 수 있게 함"""
+        return self.filled_slots
+
+    def draw(self, surface, box_view_img, open_box_img):
+        # 1. 배경 박스
+        view_rect = box_view_img.get_rect(center=(self.screen_width_half, self.screen_height_half))
+        surface.blit(box_view_img, view_rect)
+        
+        box_img = pygame.transform.scale(open_box_img, (int(self.screen_width*0.3236), int(self.screen_height*0.3917)))
+        box_rect = box_img.get_rect(topleft=(int(self.screen_width*0.3419), int(self.screen_height*0.4356)))
+        surface.blit(box_img, box_rect)
+
+        # 2. 빈 버튼(슬롯) 그리기
+        if self.state in ["button_select", "item_moving", "item_fade_in", "idle", "item_complete"]: 
+            for btn in self.buttons:
+                surface.blit(btn['image'], btn['rect'])
+                
+                # (선택 사항) 이미 찬 슬롯은 어둡게 표시하거나 X 표시를 하고 싶다면 여기서 btn['index'] in self.occupied_indices 체크
+
+        # 3. [추가 4] 이미 배치 완료된 아이템들 그리기 (계속 유지됨)
+        for item in self.filled_slots:
+            surface.blit(item['image'], item['rect'])
+
+        # 4. 현재 움직이거나 페이드인 중인 아이템 그리기 (가장 위)
+        if self.state in ["item_fade_in", "button_select"]:
+            if self.fade_image:
+                temp_img = self.fade_image.copy()
+                temp_img.set_alpha(int(self.fade_alpha))
+                surface.blit(temp_img, self.fade_pos)
+        
+        elif self.state == "item_moving":
+            if self.moving_image and self.move_start_pos and self.move_target_pos:
+                t = self.move_progress
+                ease_t = t * t * (3 - 2 * t)
+                
+                current_x = self.move_start_pos[0] + (self.move_target_pos[0] - self.move_start_pos[0]) * ease_t
+                current_y = self.move_start_pos[1] + (self.move_target_pos[1] - self.move_start_pos[1]) * ease_t
+                
+                rect = self.moving_image.get_rect(center=(current_x, current_y))
+                surface.blit(self.moving_image, rect)
+
+
+# ==================== 수정된 box_item 함수 ====================
+
+def box_item(box_system, user, ai, mouse_pos):
+    """
+    state가 'item'일 때 호출되는 함수
+    이미 박스는 열려있는 상태로 진입함
+    """
+    global screen, box_view_img, open_box_img, myturn_btn_img, state
+    
+    # 1. idle 상태라면 즉시 아이템 등장 시퀀스 시작 (클릭 대기 X)
+    if box_system.state == "idle":
+        # 인벤토리 로직 (예시)
+        # 실제 게임에서는 user.inventory 등에서 가져오거나 랜덤 생성
+        if user.inven[0]:
+            test_item = pygame.image.load(MY_ADRENALINE_IMG).convert_alpha()
+            test_item = pygame.transform.scale(test_item, (int(screen_width*0.15), int(screen_height*0.15)))
+        else:
+            return
+        
+        box_system.start_item_sequence(test_item, myturn_btn_img, is_right_side=False)
+    
+    box_system.check_hover(mouse_pos)
+
+    # 2. 시스템 업데이트 및 그리기
+    box_system.update()
+    box_system.draw(screen, box_view_img, open_box_img)
+
+    # 3. 아이템 획득이 완전히 끝났을 때의 처리 (예: 다시 턴제로 돌아가기 등)
+    if box_system.state == "item_complete":
+        print("아이템 획득 완료")           
+        # 여기서 state를 변경하거나 다음 로직을 수행
+        # 예: state = 'main_game_loop' 
+        # 임시로 idle로 두어 계속 아이템이 나오게 할 수도 있고, 루프를 끊을 수도 있음
+        box_system.state = "idle" # 테스트용: 다시 아이템 나오게 하기
+    
+myturn_btn_img = [
+    [0,pygame.image.load(MY_BTTM_LEFT_IMG), 0.0615, 0.6928, 0.1316, 0.1606],
+    [0,pygame.image.load(MY_BTTM_RIGHT_IMG), 0.9455, 0.6939, 0.1288, 0.1622],
+    [0,pygame.image.load(MY_BTTM_THREE_IMG), 0.7990, 0.6928, 0.1069, 0.1594],
+    [0,pygame.image.load(MY_BTTM_TWO_IMG), 0.2097, 0.6917, 0.1087, 0.1622],
+    [1,pygame.image.load(MY_TOP_LEFT_IMG),0.1656, 0.3200, 0.0931, 0.0978],
+    [1,pygame.image.load(MY_TOP_RIGHT_IMG), 0.8441, 0.3211, 0.0931, 0.0983],
+    [1,pygame.image.load(MY_TOP_THREE_IMG), 0.7316, 0.3233, 0.0774, 0.0978],
+    [1,pygame.image.load(MY_TOP_TWO_IMG), 0.2799, 0.3222, 0.0788, 0.0994],
+]
+
+width = 600
+height = 700
 def Adrenaline():
     return
 def Glasses():
@@ -1290,12 +1406,12 @@ def Phone():
 def inverter():
     return
 
-
+box_system = None
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick
-
+    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick, box_system
+    box_system = BoxItemSystem(screen_width, screen_height)
     running = True
     while running:
         mouse_pos = pygame.mouse.get_pos()
@@ -1357,14 +1473,22 @@ def main():
                     state = 'Complete_sign_onClick'
                 elif state == 'box_pre' and closeBox_btn.check_for_input(mouse_pos):
                     inGame_tick = 0
+                    maxHp=lsj_r.rint(2,4) 
+                    user=B_def.Action(maxHp)
+                    ai=B_def.Action(maxHp)
                     mouse_cursor_arrow()
                     state = 'box_open'
                 elif state == 'box_open' and open_box_btn.check_for_input(mouse_pos):
                     mouse_cursor_arrow()
-                    maxHp=lsj_r.rint(2,4) 
-                    user=B_def.Action(maxHp)
-                    ai=B_def.Action(maxHp)
                     state = 'item'
+                    inGame_tick = 0
+                elif state == 'item':
+                    result = box_system.handle_click(mouse_pos)
+                    if result == "item_button_clicked":
+                        print("아이템 버튼 클릭!")
+                
+
+
 
         screen.fill(BLACK)
         if state == 'menu':
@@ -1392,9 +1516,9 @@ def main():
         elif state == 'box_pre':
             box_pre(mouse_pos)
         elif state == 'box_open':
-            box_open(mouse_pos)
+            box_open(mouse_pos, user)
         elif state == 'item':
-            box_item(user, ai, mouse_pos)
+            box_item(box_system, user, ai, mouse_pos)
         pygame.display.update()
         TIME.tick(60)
 
