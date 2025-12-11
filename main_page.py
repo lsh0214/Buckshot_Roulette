@@ -1516,7 +1516,7 @@ def bullet_open():
         
 def dealer_bulleting():
     global screen, state
-    base_img = pygame.transform.scale(BULLET_OPEN_VIEW_IMG, (screen_width, screen_height))
+    base_img = pygame.transform.scale(gameroom_table_img, (screen_width, screen_height))
     rect = base_img.get_rect()
     rect.center = (screen_width_half, screen_height_half)
     screen.blit(base_img, rect)
