@@ -1377,13 +1377,13 @@ def box_item(box_system, user, ai, mouse_pos):
         box_system.state = "idle" # 테스트용: 다시 아이템 나오게 하기
     
 myturn_btn_img = [
-    [0,pygame.image.load(MY_BTTM_LEFT_IMG), 0.0615, 0.6928, 0.1316, 0.1606],
+    [1,pygame.image.load(MY_BTTM_LEFT_IMG), 0.0615, 0.6928, 0.1316, 0.1606],
     [0,pygame.image.load(MY_BTTM_RIGHT_IMG), 0.9455, 0.6939, 0.1288, 0.1622],
     [0,pygame.image.load(MY_BTTM_THREE_IMG), 0.7990, 0.6928, 0.1069, 0.1594],
-    [0,pygame.image.load(MY_BTTM_TWO_IMG), 0.2097, 0.6917, 0.1087, 0.1622],
+    [1,pygame.image.load(MY_BTTM_TWO_IMG), 0.2097, 0.6917, 0.1087, 0.1622],
     [1,pygame.image.load(MY_TOP_LEFT_IMG),0.1656, 0.3200, 0.0931, 0.0978],
-    [1,pygame.image.load(MY_TOP_RIGHT_IMG), 0.8441, 0.3211, 0.0931, 0.0983],
-    [1,pygame.image.load(MY_TOP_THREE_IMG), 0.7316, 0.3233, 0.0774, 0.0978],
+    [0,pygame.image.load(MY_TOP_RIGHT_IMG), 0.8441, 0.3211, 0.0931, 0.0983],
+    [0,pygame.image.load(MY_TOP_THREE_IMG), 0.7316, 0.3233, 0.0774, 0.0978],
     [1,pygame.image.load(MY_TOP_TWO_IMG), 0.2799, 0.3222, 0.0788, 0.0994],
 ]
 
