@@ -1174,6 +1174,8 @@ class BoxItemSystem:
         
         # 이미 사용된 버튼의 인덱스를 저장하는 세트 (빠른 검색용)
         self.occupied_indices = set()
+
+        self.current_item_name= None
         
         # 페이드 인 변수
         self.fade_image = None
@@ -1193,7 +1195,7 @@ class BoxItemSystem:
         self.move_progress = 0
         self.move_speed = 0.05
 
-    def start_item_sequence(self, item_image, button_data, is_right_side=False):
+    def start_item_sequence(self, item_image, button_data, item_name, is_right_side=False):
         """아이템 획득 시퀀스 시작"""
         # 이미 모든 칸이 꽉 찼는지 확인하는 로직이 필요하다면 여기에 추가
         if len(self.filled_slots) >= len(button_data):
@@ -1202,6 +1204,8 @@ class BoxItemSystem:
 
         self.state = "item_fade_in"
         self.fade_image = item_image
+        self.current_item_name= item_name
+
         self.fade_alpha = 0
         self.current_img_pos = 1 if is_right_side else 0
         
@@ -1297,7 +1301,7 @@ class BoxItemSystem:
                     return "item_button_clicked"
         return None
     
-    def update(self):
+    def update(self, user):
         if self.state == "item_fade_in":
             self.fade_alpha += self.fade_speed
             if self.fade_alpha >= 255:
@@ -1310,12 +1314,12 @@ class BoxItemSystem:
                 self.move_progress = 1
                 
                 # [추가 3] 이동 완료 시 데이터 영구 저장
-                self.save_item_to_slot()
+                self.save_item_to_slot(user)
                 
                 self.state = "item_complete"
-                self.reset_for_next_item()
 
-    def save_item_to_slot(self):
+
+    def save_item_to_slot(self, user):
         """이동이 끝난 아이템을 리스트에 저장하고 자리를 차지함"""
         # 최종 위치 계산
         final_rect = self.moving_image.get_rect(center=self.move_target_pos)
@@ -1386,7 +1390,7 @@ class BoxItemSystem:
 
 # ==================== 수정된 box_item 함수 ====================
 test_item = None
-def box_item(box_system, user, ai, mouse_pos):
+def box_item(box_system, user, ai, mouse_pos, item_count):
     """
     state가 'item'일 때 호출되는 함수
     이미 박스는 열려있는 상태로 진입함
@@ -1394,7 +1398,12 @@ def box_item(box_system, user, ai, mouse_pos):
     global screen, box_view_img, open_box_img, myturn_btn_img, state, test_item
     
     if box_system.state == "idle":
-        current=user.start_inven()
+        #인벤토리가 이미 가득 찼다면 강제로 다음 단계로 이동
+        if len(box_system.filled_slots) >= len(myturn_btn_img):
+            print("인벤토리가 가득 찼습니다.")
+            state = 'bullet_open'
+            return item_count
+        current= user.start_inven()
         if current == "Handcuffs":
             test_item = pygame.image.load(MY_HANDCUFFS_IMG).convert_alpha()
         elif current == "Beer":
@@ -1417,21 +1426,26 @@ def box_item(box_system, user, ai, mouse_pos):
         if test_item is not None:
             # 크기 변환 및 시퀀스 시작을 조건문 안으로 이동
             test_item = pygame.transform.scale(test_item, (int(screen_width*0.15), int(screen_height*0.15)))
-            box_system.start_item_sequence(test_item, myturn_btn_img, is_right_side=False)
+            box_system.start_item_sequence(test_item, myturn_btn_img, current, is_right_side=False)
     
     box_system.check_hover(mouse_pos)
 
     # 2. 시스템 업데이트 및 그리기
-    box_system.update()
+    box_system.update(user)
     box_system.draw(screen, box_view_img, open_box_img)
 
-    # 3. 아이템 획득이 완전히 끝났을 때의 처리 (예: 다시 턴제로 돌아가기 등)
     if box_system.state == "item_complete":
         print("아이템 획득 완료")           
-        # 여기서 state를 변경하거나 다음 로직을 수행
-        # 예: state = 'main_game_loop' 
-        # 임시로 idle로 두어 계속 아이템이 나오게 할 수도 있고, 루프를 끊을 수도 있음
-        box_system.state = "idle" # 테스트용: 다시 아이템 나오게 하기
+        item_count -= 1 # 횟수 차감
+        print(f"남은 횟수: {item_count}")
+        
+        # [종료 조건] 횟수를 다 썼거나 인벤토리가 꽉 찼으면 다음 단계로
+        if item_count <= 0 or (0 not in user.inven):
+            state = 'bullet_open' # 다음 단계
+        else:
+            box_system.reset_for_next_item()
+
+    return item_count
     
 myturn_btn_img = [
     [1,pygame.image.load(MY_BTTM_LEFT_IMG), 0.0611, 0.6928, 0.2115, 0.3600],
@@ -1774,6 +1788,7 @@ def main():
     box_system = BoxItemSystem()
     damage_manager = DamageBoxManager(screen_width, screen_height)
     running = True
+    item_count = 0
     while running:
         mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
@@ -1843,16 +1858,25 @@ def main():
                     maxHp=lsj_r.rint(2,4)
                     user=B_def.Action(maxHp)
                     ai=B_def.Action(maxHp)
+                    item_count = lsj_r.rint(2,4)
+                    print(f"아이템 획득 기회 : {item_count}획")
                     mouse_cursor_arrow()
                     state = 'box_open'
+                # 아이템 클릭 이벤트 (횟수가 남았을 때만 클릭 허용)
+                elif state == 'item':
+                    if item_count > 0:
+                        result = box_system.handle_click(mouse_pos)
+                        if result == "item_button_clicked":
+                            print("아이템 버튼 클릭됨")
                 elif state == 'box_open' and open_box_btn.check_for_input(mouse_pos):
                     mouse_cursor_arrow()
                     state = 'item'
                     inGame_tick = 0
                 elif state == 'item':
-                    result = box_system.handle_click(mouse_pos)
-                    if result == "item_button_clicked":
-                        print("아이템 버튼 클릭!")
+                    if item_count > 0 and box_system.state == "idle":
+                        result = box_system.handle_click(mouse_pos)
+                        if result == "item_button_clicked":
+                            print(f"아이템 버튼 클릭! (현재 남은 횟수: {item_count})")
 
         screen.fill(BLACK)
         if state == 'menu':
@@ -1882,7 +1906,7 @@ def main():
         elif state == 'box_open':
             box_open(mouse_pos)
         elif state == 'item':
-            box_item(box_system, user, ai, mouse_pos)
+            item_count = box_item(box_system, user, ai, mouse_pos, item_count)
         elif state == 'bullet_open':
             bullet_open()
         elif state == 'moniter_zoomIn_bullet':
