@@ -860,7 +860,9 @@ moniter_img = pygame.transform.smoothscale(BLACK_MONITER_IMG, (screen_width, scr
 
 HEART_IMG = pygame.image.load("moniter_imgs/heart_img.png").convert_alpha()
 HEARTBAR_MONITER_IMG = pygame.image.load("moniter_imgs/heartBar_moniter.png").convert_alpha()
+HEARTBAR_MONITER_IMG = pygame.transform.scale(HEARTBAR_MONITER_IMG, (screen_width, screen_height))
 HEARTBAR_MONITER_FULL_IMG = pygame.image.load("moniter_imgs/heartBar_moniter_full.png").convert_alpha()
+HEARTBAR_MONITER_FULL_img = pygame.transform.scale(HEARTBAR_MONITER_FULL_IMG, (screen_width, screen_height))
 MONITER_ROUND_IMG = pygame.image.load("moniter_imgs/moniter_round.png").convert_alpha()
 round_moniter_img = pygame.transform.smoothscale(MONITER_ROUND_IMG, (screen_width, screen_height))
 
@@ -879,7 +881,7 @@ def Complete_sign_onClick(mouse_pos):
     global screen,dis_img_tick, IMG_y_position, IMG_x_position, img_x, img_y, up_waiver_tick, state, score_tick
     if IMG_x_position < 0 and IMG_y_position > screen_height:
         state = 'moniter_in'
-        moniter_zoomIn(mouse_pos)
+        moniter_zoomIn(SEE_WAIVER_VIEW,moniter_img,round_moniter_img,round_moniter_1_img)
         return
         
     else:
@@ -895,7 +897,7 @@ def Complete_sign_onClick(mouse_pos):
         screen.blit(WAIVER_ON_TABLE_img, (IMG_x_position, IMG_y_position))
     dis_img_tick += 1
 
-def moniter_zoomIn(mouse_pos):
+def moniter_zoomIn(zoom_img, current_black_moniter_img, current_moniter_1_img, current_moniter_2_img, twinkle = True):
     global state, screen, score_tick
     score_tick += 1
 
@@ -904,35 +906,52 @@ def moniter_zoomIn(mouse_pos):
         width = int(screen_width * zoom_factor)
         height = int(screen_height * zoom_factor)
 
-        scaled_current = pygame.transform.scale(SEE_WAIVER_VIEW, (width, height))
+        scaled_current = pygame.transform.scale(zoom_img, (width, height))
         rect = scaled_current.get_rect()
         rect.center = (screen_width_half - int(score_tick * 0.01736*screen_width), screen_height_half + int(score_tick * 0.00556*screen_height))
 
         screen.blit(scaled_current, rect)
     elif score_tick <=15:
-        rect = moniter_img.get_rect()
+        rect = current_black_moniter_img.get_rect()
         rect.center = (screen_width_half, screen_height_half)
-        screen.blit(moniter_img, rect)
+        screen.blit(current_black_moniter_img, rect)
     elif score_tick <=30:
-        rect = round_moniter_img.get_rect()
+        rect = current_moniter_1_img.get_rect()
         rect.center = (screen_width_half, screen_height_half)
-        screen.blit(round_moniter_img, rect)
-    elif score_tick<=180:
-        if (score_tick % 40) <= 20:
-            rect = round_moniter_1_img.get_rect()
-            rect.center = (screen_width_half, screen_height_half)
-            screen.blit(round_moniter_1_img, rect)
+        screen.blit(current_moniter_1_img, rect)
+    if twinkle and score_tick > 30:
+        if score_tick<=180:
+            if (score_tick % 40) <= 20:
+                rect = current_moniter_2_img.get_rect()
+                rect.center = (screen_width_half, screen_height_half)
+                screen.blit(current_moniter_2_img, rect)
+            else:
+                rect = current_moniter_1_img.get_rect()
+                rect.center = (screen_width_half, screen_height_half)
+                screen.blit(current_moniter_1_img, rect)
         else:
-            rect = round_moniter_img.get_rect()
+            score_tick = 10
+            state = 'moniter_out'
+            moniter_zoomOut()
+            return
+    elif twinkle is not True and score_tick > 30:
+        if score_tick<=50:
+            rect = current_moniter_1_img.get_rect()
             rect.center = (screen_width_half, screen_height_half)
-            screen.blit(round_moniter_img, rect)
-    else:
-        score_tick = 10
-        state = 'moniter_out'
-        moniter_zoomOut(mouse_pos)
-        return
+            screen.blit(current_moniter_1_img, rect)
+        elif score_tick<=70:
+            rect = current_moniter_2_img.get_rect()
+            rect.center = (screen_width_half, screen_height_half)
+            screen.blit(current_moniter_2_img, rect)
+        else:
+            score_tick = 10
+            global inGame_tick 
+            inGame_tick = 0
+            state = 'bullet_zoomOut'
+            bullet_zoomOut()
+            return
 
-def moniter_zoomOut(mouse_pos):
+def moniter_zoomOut():
     global screen, score_tick, state
     if score_tick <= 10 and score_tick > 0:
         zoom_factor = 1.0 + score_tick * 0.05  # 확대 속도를 확 늘림 아래 2줄까지 AI
@@ -946,7 +965,6 @@ def moniter_zoomOut(mouse_pos):
         screen.blit(scaled_current, rect)
     else:
         state = 'box_pre'
-        box_pre(mouse_pos)
         return
     score_tick-=1
 
@@ -981,14 +999,12 @@ def box_pre(mouse_pos):
             rect = close_box_img.get_rect()
             rect.topleft = (int(screen_width*0.3419), int(screen_height*0.5156))
             screen.blit(close_box_img, rect)
-        # elif inGame_tick <=50:
         else:
             shaking_bool = True
             shake_offset = shaking_camera(1.9, 0.1, 0.1)
             seq_sway_x= shake_offset[0]
             seq_offset_y= shake_offset[1]
 
-            # 버튼 위치 업데이트 (흔들림 적용)
             closeBox_btn.x_pos = int(screen_width*0.3419) +seq_sway_x
             closeBox_btn.y_pos = int(screen_height*0.5156) + +seq_offset_y
             closeBox_btn.btn_rect = closeBox_btn.image_btn.get_rect(topleft=(closeBox_btn.x_pos, closeBox_btn.y_pos))
@@ -996,9 +1012,10 @@ def box_pre(mouse_pos):
             closeBox_btn.check_for_hover(mouse_pos)
             closeBox_btn.update(screen) 
     inGame_tick+=1
+
 bool_num = 0
 open_box_btn = Button(open_box_img, int(screen_width*0.3236), int(screen_height*0.3917))
-def box_open(mouse_pos, user):
+def box_open(mouse_pos):
     global screen, inGame_tick, bool_num
     rect = box_view_img.get_rect()
     rect.center = (screen_width_half, screen_height_half)
@@ -1031,7 +1048,7 @@ AFTER_SAW_IMG = "inGame_imgs/after_saw.png"
 AI_FAKE_BULLET_IMG = "inGame_imgs/AIFakebullet.png"
 AI_REAL_BULLET_IMG = "inGame_imgs/AIRealbullet.png"
 BEFORE_SAW_IMG = "inGame_imgs/before_saw.png"
-BULLET_OPEN_VIEW_IMG = "inGame_imgs/bulletOpenView.png"
+BULLET_OPEN_VIEW_IMG = pygame.image.load("inGame_imgs/bulletOpenView.png").convert_alpha()
 DEALER_SHOT_DEALER_VIEW_IMG = "inGame_imgs/dealer_shot_dealer_view.png"
 DEALER_SHOT_ME_VIEW_IMG = "inGame_imgs/dealer_shot_me_view.png"
 FAKE_BULLET_OPEN_IMG = "inGame_imgs/Fakebullet_open.png"
@@ -1402,6 +1419,83 @@ myturn_btn_img = [
 
 width = 600
 height = 700
+
+def bullet_zoomOut():
+    global screen, score_tick, state, inGame_tick, width, height
+    
+    # [수정] 줌아웃 계산을 함수 맨 위로 올려서 에러(UnboundLocalError) 방지
+    # 뒤쪽(70 tick 이후)에서 쓸 변수 미리 계산
+    zoom_tick = 10 - score_tick # score_tick이 줄어드는 것을 감안하여 계산
+    if zoom_tick < 0: zoom_tick = 0
+    
+    # 1. 하트바 전체 화면 (0~10)
+    if inGame_tick <= 10:
+        bullet_open_view = pygame.transform.scale(HEARTBAR_MONITER_FULL_img, (screen_width, screen_height))
+        rect = bullet_open_view.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(bullet_open_view, rect)
+
+    # 2. 실탄/공포탄 확인 뷰 (10~60)
+    elif inGame_tick <= 60:
+        # width, height가 아니라 전체 화면으로 보여주는 것이 자연스러움
+        bullet_open_view = pygame.transform.scale(BULLET_OPEN_VIEW_IMG, (screen_width, screen_height))
+        rect = bullet_open_view.get_rect()
+        rect.center = (screen_width_half, screen_height_half)
+        screen.blit(bullet_open_view, rect)
+        
+        # [추가] 여기에 실탄/공포탄 그림을 그리는 로직을 넣으시면 됩니다.
+        # 예: screen.blit(REAL_BULLET_IMG, 위치)
+        
+    # 3. 테이블로 줌 아웃 (60~70)
+    elif inGame_tick <= 70:
+        # score_tick을 사용하여 줌아웃 (10에서 0으로 줄어듦)
+        zoom_factor = 1.0 + score_tick * 0.05
+        
+        # 안전장치
+        if zoom_factor < 1.0: zoom_factor = 1.0
+            
+        w_out = int(screen_width * zoom_factor)
+        h_out = int(screen_height * zoom_factor)
+
+        scaled_current = pygame.transform.scale(GAMEROOM_TABLE_IMG, (w_out, h_out))
+        rect = scaled_current.get_rect()
+        # 줌인할 때 썼던 좌표 계산과 반대로
+        rect.center = (screen_width_half - score_tick * 50, screen_height_half + score_tick * 10)
+
+        screen.blit(scaled_current, rect)
+        score_tick -= 1 # 줌아웃을 위해 값을 줄임
+        
+    # 4. 딜러 턴으로 넘기기
+    else:
+        state = 'dealer_bulleting'
+        dealer_bulleting()
+        return
+        
+    inGame_tick += 1
+
+def bullet_open():
+    global screen, state, score_tick, gameroom_table_img
+    
+    # 1. 줌인 효과 (테이블 이미지 확대)
+    score_tick += 1
+    
+    # 중심점 잡고 확대 (모니터 위치로 줌인되는 느낌)
+    target_img = pygame.transform.scale(box_view_img, (screen_width, screen_height))
+    rect = target_img.get_rect()
+    
+    # 화면 중앙보다 약간 위쪽(모니터 쪽)으로 줌인
+    rect.center = (screen_width_half, screen_height_half + int(score_tick * 0.00556*screen_height))
+    screen.blit(target_img, rect)
+
+    # 2. 일정 시간 후 다음 단계로 전환
+    if score_tick >= 10:
+        state = 'moniter_zoomIn_bullet'
+        score_tick = 0 # 다음 함수를 위해 타이머 초기화
+        moniter_zoomIn(gameroom_table_img, moniter_img, HEARTBAR_MONITER_IMG, HEARTBAR_MONITER_FULL_IMG, False)
+        
+def dealer_bulleting():
+    return
+
 def Adrenaline():
     return
 def Glasses():
@@ -1446,6 +1540,8 @@ def main():
                     state = 'menu'
                 elif state == 'menu':
                     state = 'complete_sign'
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+                state = 'bullet_open'
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
@@ -1523,15 +1619,28 @@ def main():
         elif state == 'Complete_sign_onClick':
             Complete_sign_onClick(mouse_pos)
         elif state == 'moniter_in':
-            moniter_zoomIn(mouse_pos)
+            moniter_zoomIn(SEE_WAIVER_VIEW,moniter_img,round_moniter_img,round_moniter_1_img)
         elif state == 'moniter_out':
-            moniter_zoomOut(mouse_pos)
+            moniter_zoomOut()
         elif state == 'box_pre':
             box_pre(mouse_pos)
         elif state == 'box_open':
-            box_open(mouse_pos, user)
+            box_open(mouse_pos)
         elif state == 'item':
             box_item(box_system, user, ai, mouse_pos)
+        elif state == 'bullet_open':
+            bullet_open()
+        elif state == 'moniter_zoomIn_bullet':
+            # [수정] 줌인 될 때 보여줄 이미지 순서: 박스뷰 -> 블랙모니터 -> 하트바 -> 하트바전체
+            # 첫 번째 인자에 box_view_img 대신 확대된 느낌을 이어갈 이미지를 넣어야 자연스럽지만,
+            # 현재 구조상 box_view_img를 쓰기로 했다면 유지합니다.
+            moniter_zoomIn(gameroom_table_img, moniter_img, HEARTBAR_MONITER_IMG, HEARTBAR_MONITER_FULL_IMG, False)
+            
+        elif state == 'bullet_zoomOut':
+            bullet_zoomOut()
+            
+        elif state == 'dealer_bulleting':
+            dealer_bulleting()
         pygame.display.update()
         TIME.tick(60)
 
