@@ -44,7 +44,10 @@ TIME = pygame.time.Clock()
 OUR_LOGO = pygame.image.load('credit_imgs/our_logo.png').convert_alpha()
 OUR_LOGO = pygame.transform.scale(OUR_LOGO, (int(screen_width*0.347),int(screen_height*0.464)))
 CREDIT_SCROLL_SPEED = 3
-
+user = None
+ai = None
+box_system = None
+damage_manager = None
 #초기 화면 설정
 state = 'menu'
 
@@ -931,9 +934,12 @@ def moniter_zoomIn(zoom_img, current_black_moniter_img, current_moniter_1_img, c
                 rect = current_moniter_2_img.get_rect()
                 rect.center = (screen_width_half, screen_height_half)
                 screen.blit(current_moniter_2_img, rect)
-                if damage_manager is not None:
-                    # 실제 플레이어/딜러 데미지 값을 넣으세요 (예: 1, 2)
-                    damage_manager.draw_health_boxes(screen, 0, 0)
+                # 객체가 생성되어 있는지 확인 (None 체크)
+                if damage_manager is not None and user is not None and ai is not None:
+                    # 깎인 체력(Damage) = 최대 체력 - 현재 체력
+                    user_dmg = 4- user.hp
+                    ai_dmg = 4 - ai.hp
+                    damage_manager.draw_health_boxes(screen, user_dmg, ai_dmg)
             else:
                 rect = current_moniter_1_img.get_rect()
                 rect.center = (screen_width_half, screen_height_half)
@@ -953,8 +959,10 @@ def moniter_zoomIn(zoom_img, current_black_moniter_img, current_moniter_1_img, c
             rect.center = (screen_width_half, screen_height_half)
             screen.blit(current_moniter_2_img, rect)
             # ★ 상자 1, 2 그리기 ★
-            if damage_manager is not None:
-                damage_manager.draw_health_boxes(screen, 0, 0 )
+            if damage_manager is not None and user is not None and ai is not None:
+                user_dmg = 4 - user.hp 
+                ai_dmg = 4 - ai.hp
+                damage_manager.draw_health_boxes(screen, user_dmg, ai_dmg)
         else:
             score_tick = 10
             global inGame_tick 
@@ -991,6 +999,7 @@ open_box_img = pygame.transform.smoothscale(OPEN_BOX, (int(screen_width*0.3236),
 inGame_tick = 0
 def box_pre(mouse_pos):
     global screen, state, inGame_tick, shaking_bool
+    global user, ai
     if inGame_tick <=5:
         rect = gameroom_table_img.get_rect()
         rect.center = (screen_width_half, screen_height_half)
@@ -1066,6 +1075,7 @@ DEALER_SHOT_ME_VIEW_IMG = "inGame_imgs/dealer_shot_me_view.png"
 FAKE_BULLET_OPEN_IMG = "inGame_imgs/Fakebullet_open.png"
 IN_GAME_HEARGAGE_IMG = "inGame_imgs/inGame_heargage.png"
 ME_SHOT_DEALER_VIEW_IMG = "inGame_imgs/me_shot_dealer_view.png"
+ME_SHOT_DEALER_VIEW_IMG = pygame.image.load(ME_SHOT_DEALER_VIEW_IMG).convert()
 ME_SHOT_ME_VIEW_IMG = "inGame_imgs/me_shot_me_view.png"
 MY_BULLET_REMOVING_IMG = "inGame_imgs/MybulletRemoving.png"
 MY_FAKE_BULLET_IMG = "inGame_imgs/MyFakebullet.png"
@@ -1462,29 +1472,39 @@ width = 600
 height = 700
 
 def bullet_zoomOut():
+    # [중요] 전역 변수 가져오기
     global screen, score_tick, state, inGame_tick, width, height
+    global user, ai, damage_manager 
     
-    # [수정] 줌아웃 계산을 함수 맨 위로 올려서 에러(UnboundLocalError) 방지
-    # 뒤쪽(70 tick 이후)에서 쓸 변수 미리 계산
-    zoom_tick = 10 - score_tick # score_tick이 줄어드는 것을 감안하여 계산
-    if zoom_tick < 0: zoom_tick = 0
-    
-    # 1. 하트바 전체 화면 (0~10)
-    if inGame_tick <= 10:
+    # 1. 하트바(체력창) 확인 단계 (0 ~ 60 ticks)
+    # [수정] 시간을 10에서 60으로 늘려 약 1초간 확실하게 보여줍니다.
+    if inGame_tick <= 60:
+        # (1) 배경 그리기
         bullet_open_view = pygame.transform.scale(HEARTBAR_MONITER_FULL_img, (screen_width, screen_height))
         rect = bullet_open_view.get_rect()
         rect.center = (screen_width_half, screen_height_half)
         screen.blit(bullet_open_view, rect)
-
-    # 2. 실탄/공포탄 확인 뷰 (10~60)
-    elif inGame_tick <= 60:
-        tick = inGame_tick - 10
-        if tick <= 10 and tick >= 0:
-            # [수정] score_tick(고정값) 대신 tick(변하는 값)을 사용하여 부드럽게 줄어들도록 변경
-            # tick이 0일 때(시작)는 가장 크고, 10일 때(끝)는 0이 되어야 함
-            reverse_tick = 10 - tick 
+        
+        # (2) 체력(검은 상자) 그리기 - 즉시 실행됨
+        if damage_manager is not None and user is not None and ai is not None:
+            # 실제 데이터 적용 (4 - 현재 체력)
+            user_dmg = 4 - user.hp 
+            ai_dmg = 4 - ai.hp
             
-            zoom_factor = 1.0 + reverse_tick * 0.05  # 1.5배 -> 1.0배로 서서히 감소
+            # [최종] 색상을 다시 검은색(0, 0, 0)으로 원복
+            damage_manager.draw_health_boxes(screen, user_dmg, ai_dmg, color=(0, 0, 0))
+
+    # 2. 실탄/공포탄 확인 뷰 (60 ~ 110 ticks)
+    # [수정] 위에서 50틱 늘렸으므로, 여기도 범위를 뒤로 미룹니다.
+    elif inGame_tick <= 110:
+        # 애니메이션 계산용 tick (0부터 시작하도록 보정)
+        # 60에서 시작하므로 70을 뺍니다 (기존 로직 유지)
+        tick = inGame_tick - 60 
+        
+        # 줌아웃 애니메이션 (0~10)
+        if tick <= 10:
+            reverse_tick = 10 - tick 
+            zoom_factor = 1.0 + reverse_tick * 0.05
             width = int(screen_width * zoom_factor)
             height = int(screen_height * zoom_factor)
 
@@ -1496,18 +1516,19 @@ def bullet_zoomOut():
 
             screen.blit(scaled_current, rect)
         else:
-            # width, height가 아니라 전체 화면으로 보여주는 것이 자연스러움
+            # 정지 화면
             bullet_open_view = pygame.transform.scale(DEALER_VIEW, (screen_width, screen_height))
             rect = bullet_open_view.get_rect()
             rect.center = (screen_width_half, screen_height_half)
             screen.blit(bullet_open_view, rect)
             
-        # [추가] 여기에 실탄/공포탄 그림을 그리는 로직을 넣으시면 됩니다.
-        # 예: screen.blit(REAL_BULLET_IMG, 위치)
+    # 3. 테이블로 줌 아웃 (110 ~ 120 ticks)
+    # [수정] 여기도 시간을 뒤로 미룹니다.
+    elif inGame_tick <= 120:
+        # score_tick을 사용한 줌아웃 효과 (기존 로직 유지)
+        # score_tick은 외부에서 관리되므로 그대로 둡니다.
+        if score_tick > 10: score_tick = 10 # 안전장치
         
-    # 3. 테이블로 줌 아웃 (60~70)
-    elif inGame_tick <= 70:
-        # score_tick을 사용하여 줌아웃 (10에서 0으로 줄어듦)
         zoom_factor = 1.0 + score_tick * 0.03
         
         # 안전장치
@@ -1522,12 +1543,13 @@ def bullet_zoomOut():
         rect.center = (screen_width_half - score_tick * 100, screen_height_half + score_tick * 20)
 
         screen.blit(scaled_current, rect)
-        score_tick -= 1 # 줌아웃을 위해 값을 줄임
+        score_tick -= 1 
         
     # 4. 딜러 턴으로 넘기기
     else:
         state = 'dealer_bulleting'
-        dealer_bulleting()
+        current_mouse_pos = pygame.mouse.get_pos()
+        dealer_bulleting(current_mouse_pos)
         return
         
     inGame_tick += 1
@@ -1711,7 +1733,8 @@ def heart_damage_box(dmg_one, dmg_two):
 
 def moniter_heart_boxs(base_img):
     global screen, state, damage_manager # 전역 damage_manager 사용
-    
+    global user,ai
+
     base_img = pygame.transform.scale(base_img, (screen_width, screen_height))
     rect = base_img.get_rect(center=(screen_width_half, screen_height_half))
     screen.blit(base_img, rect)
@@ -1720,9 +1743,14 @@ def moniter_heart_boxs(base_img):
         current_dmg_4 = 4
         damage_manager.draw_bullet_boxes(screen, current_dmg_3, current_dmg_4)
     elif base_img == HEARTBAR_MONITER_FULL_IMG and damage_manager is not None:
-        current_dmg_1 = 3
-        current_dmg_2 = 4
-        damage_manager.draw_bullet_boxes(screen, current_dmg_1, current_dmg_2)
+        # [수정] 실제 체력 데이터 연결
+        if user is not None and ai is not None:
+            user_dmg = 4 - user.hp
+            ai_dmg = 4 - ai.hp
+            damage_manager.draw_health_boxes(screen, user_dmg, ai_dmg)
+        else:
+            # 객체가 없을 때(오류 방지용)는 0으로 처리
+            damage_manager.draw_health_boxes(screen, 0, 0)
     elif base_img == GAMEROOM_TABLE_IMG and damage_manager is not None: #이거 준서가 보내주면 해야함. 일단 지금은 저장한 후
         
         current_dmg_5 = 3
@@ -1770,7 +1798,6 @@ def dealer_bulleting(mouse_pos):
         item_view_img = Button(item_view_img, screen_width_half, screen_height_half)
         item_view_img.check_for_hover(mouse_pos, True)
         item_view_img.update(screen)
-        shoutgun_move()
     
     bulleting_tick += 1
     # item_cnt -= 1
@@ -1781,13 +1808,104 @@ def dealer_bulleting(mouse_pos):
     #         return
     # user.start_Shotgun(lsj_r.rint(3,8))
     # B_def.Action.bullet
-shoutgun_move_tick = 0
-def shoutgun_move():
-    global screen, shoutgun_move_tick
-    shot_img = pygame.transform.scale(INGAME_SHOTGUN_IMG, (int(screen_width*0.158),int(screen_height*0.489)))
-    if shoutgun_move_tick<=10:
-        shot_rect = shot_img.get_rect(center =(screen_width_half- (screen_width_half*0.05), screen_height_half-(screen_height_half*0.28)))
-        screen.blit(shot_img, shot_rect)
+shotgun_tick = 0 
+
+def shotgun_shoot_motion(mouse_pos, target='dealer'):
+    global screen, shotgun_tick, shaking_bool, shake_angle
+    # 전역 이미지 변수들 호출
+    global DEALER_VIEW, ME_SHOT_DEALER_VIEW_IMG
+
+    # 1. 배경 이미지 설정
+    # 기본 배경: 딜러 뷰
+    current_bg = pygame.transform.scale(DEALER_VIEW, (screen_width, screen_height))
+    
+    # 2. 샷건 이미지 설정
+    shot_w = int(screen_width * 0.25)
+    shot_h = int(screen_height * 0.6)
+    shot_img = pygame.transform.scale(INGAME_SHOTGUN_IMG, (shot_w, shot_h))
+    
+    # 총의 목표 위치
+    target_x = screen_width_half
+    target_y = screen_height - (shot_h * 0.3) 
+
+    offset_x = 0
+    offset_y = 0
+
+    # --- 애니메이션 단계별 로직 ---
+
+    # [Phase 1: 조준] (0 ~ 15 프레임)
+    if shotgun_tick <= 15:
+        # 배경 그리기
+        screen.blit(current_bg, (0,0))
+
+        progress = shotgun_tick / 15
+        ease = 1 - (1 - progress) ** 3
+        start_y = screen_height + 200
+        current_y = start_y + (target_y - start_y) * ease
+        
+        rect = shot_img.get_rect(midbottom=(target_x, int(current_y)))
+        screen.blit(shot_img, rect)
+
+    # [Phase 2: 발사 & 반동 & 플래시] (16 ~ 20 프레임)
+    elif shotgun_tick <= 20:
+        shaking_bool = True
+        shake_angle += 0.5 
+
+        # ★★★ [수정됨] 발사 순간 이미지 교체 (플래시 효과) ★★★
+        # 16, 17, 18 프레임 동안(약 0.05초) 피격 이미지를 배경으로 사용
+        if 16 <= shotgun_tick <= 18:
+            # ME_SHOT_DEALER_VIEW_IMG가 경로 문자열인 경우 로드, 이미지 객체면 바로 사용
+            if isinstance(ME_SHOT_DEALER_VIEW_IMG, str):
+                flash_surface = pygame.image.load(ME_SHOT_DEALER_VIEW_IMG).convert()
+            else:
+                flash_surface = ME_SHOT_DEALER_VIEW_IMG
+            
+            # 화면 크기에 맞게 스케일링하여 배경 덮어쓰기
+            flash_bg = pygame.transform.scale(flash_surface, (screen_width, screen_height))
+            screen.blit(flash_bg, (0, 0))
+        else:
+            # 그 외 프레임은 원래 딜러 배경
+            screen.blit(current_bg, (0, 0))
+
+        # 반동 계산
+        recoil_progress = (shotgun_tick - 15) / 5
+        offset_y = 150 * math.sin(recoil_progress * math.pi) 
+        offset_x = random.randint(-20, 20)
+
+        # 총 그리기 (배경 위에 그림)
+        rect = shot_img.get_rect(midbottom=(target_x + offset_x, int(target_y + offset_y)))
+        screen.blit(shot_img, rect)
+
+    # [Phase 3: 대기] (21 ~ 45 프레임)
+    elif shotgun_tick <= 45:
+        screen.blit(current_bg, (0,0)) # 배경
+        shaking_bool = False
+        
+        recover_progress = (shotgun_tick - 20) / 25
+        offset_y = 50 * (1 - recover_progress)
+        
+        rect = shot_img.get_rect(midbottom=(target_x, int(target_y + offset_y)))
+        screen.blit(shot_img, rect)
+
+    # [Phase 4: 총 내리기] (46 ~ 60 프레임)
+    elif shotgun_tick <= 60:
+        screen.blit(current_bg, (0,0)) # 배경
+        progress = (shotgun_tick - 45) / 15
+        ease = progress ** 2
+        
+        start_y = target_y
+        end_y = screen_height + 300 
+        current_y = start_y + (end_y - start_y) * ease
+        
+        rect = shot_img.get_rect(midbottom=(target_x, int(current_y)))
+        screen.blit(shot_img, rect)
+
+    else:
+        shotgun_tick = 0
+        return True 
+
+    shotgun_tick += 1
+    return False
 
 def Adrenaline():
     return
@@ -1811,7 +1929,7 @@ damage_manager = None
 
 # --- 메인 게임 루프 ---
 def main():
-    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick, box_system, damage_manager
+    global state, credits_elements_y_pos, sign_tick, angle, current_tick, img, up_waiver_tick, talk_text_index, talk_text_timer, score_tick, inGame_tick, box_system, damage_manager, ai, user
     box_system = BoxItemSystem()
     damage_manager = DamageBoxManager(screen_width, screen_height)
     running = True
@@ -1885,6 +2003,7 @@ def main():
                     maxHp=lsj_r.rint(2,4)
                     user=B_def.Action(maxHp)
                     ai=B_def.Action(maxHp)
+                    print("체력:",maxHp)
                     item_count = lsj_r.rint(2,4)
                     print(f"아이템 획득 기회 : {item_count}획")
                     mouse_cursor_arrow()
@@ -1949,6 +2068,15 @@ def main():
             moniter_heart_boxs(GAMEROOM_TABLE_IMG)
         elif state == 'dealer_bulleting':
             dealer_bulleting(mouse_pos)
+        elif state == 'shotgun_move':
+            # shotgun_shoot_motion이 True를 반환하면 애니메이션이 끝난 것
+            if shotgun_shoot_motion(mouse_pos, target='dealer'):
+                # 애니메이션이 끝나면 다음 상태로 변경 (예: 턴 넘기기, 결과 확인 등)
+                print("발사 끝! 턴 종료 로직으로 이동")
+                
+                # 예시: 다시 딜러가 총알 확인하는 단계로 넘어가거나, 결과를 정산하는 단계로 이동
+                # state = 'dealer_turn_check' 적절한 다음 state로 변경하세요
+                state = 'menu' # 테스트용: 메뉴로 복귀 #
         pygame.display.update()
         TIME.tick(60)
 
