@@ -1074,6 +1074,8 @@ SHOT_CHOICE_ME_IMG = "inGame_imgs/shot_choice_me.png"
 SHOT_DEALER_CHOICE_IMG = "inGame_imgs/shot_dealer_choice.png"
 WAKEUP_LEFT_IMG = "inGame_imgs/wakeup_left.png"
 WAKEUP_RIGHT_IMG = "inGame_imgs/wakeup_right.png"
+DEALER_VIEW = "inGame_imgs/dealer_view.png"
+DEALER_VIEW = pygame.image.load(DEALER_VIEW)
 # ==================================
 # money_imgs 디렉토리 내 이미지 파일
 # ==================================
@@ -1122,16 +1124,27 @@ AI_TOP_TWO_IMG = "AIturn_btn_imgs/AItoptwo.png"
 # dealer_imgs 디렉토리 내 이미지 파일
 # ==================================
 DEALER_BULLETING_IMG = "dealer_imgs/dealer_bulleting.png"
-DEALER_HANDCUFFS_IMG = "dealer_imgs/dealer_handcuffs.png"
+DEALER_BULLETING_IMG = pygame.image.load(DEALER_BULLETING_IMG)
+DEALER_HANDCUFFS_IMG = "dealer_imgs/dealer_handcuffts.png"
+DEALER_HANDCUFFS_IMG = pygame.image.load(DEALER_HANDCUFFS_IMG)
 DEALER_HURTED_FACE_IMG = "dealer_imgs/dealer_hurted_face.png"
+DEALER_HURTED_FACE_IMG = pygame.image.load(DEALER_HURTED_FACE_IMG)
 DEALER_NORMAL_FACE_IMG = "dealer_imgs/dealer_nomal_face.png"
+DEALER_NORMAL_FACE_IMG = pygame.image.load(DEALER_NORMAL_FACE_IMG)
 DEALER_NORMAL_HAND_IMG = "dealer_imgs/dealer_nomal_hand.png" # 파일명 오타(nomal) 반영
+DEALER_NORMAL_HAND_IMG = pygame.image.load(DEALER_NORMAL_HAND_IMG)
 DEALER_RED_EYES_IMG = "dealer_imgs/dealer_redEyes.png"
-DEALER_SHOT_DEALER_PUSH_IMG = "dealer_imgs/dealer_shot_dealer_push.png"
+DEALER_RED_EYES_IMG = pygame.image.load(DEALER_RED_EYES_IMG)
+DEALER_SHOT_DEALER_IMG = "dealer_imgs/dealer_shot_dealer.png"
+DEALER_SHOT_DEALER_IMG = pygame.image.load(DEALER_SHOT_DEALER_IMG)
 DEALER_SHOT_ME_IMG = "dealer_imgs/dealer_shot_me.png"
+DEALER_SHOT_ME_IMG = pygame.image.load(DEALER_SHOT_ME_IMG)
 DEALER_SHOTGUN_IMG = "dealer_imgs/dealer_shotgun.png"
+DEALER_SHOTGUN_IMG = pygame.image.load(DEALER_SHOTGUN_IMG)
 DEALER_SHOTGUN_AFTER_IMG = "dealer_imgs/dealer_shotgun_after.png"
+DEALER_SHOTGUN_AFTER_IMG = pygame.image.load(DEALER_SHOTGUN_AFTER_IMG)
 DEALER_SHOTGUN_BEFORE_IMG = "dealer_imgs/dealer_shotgun_before.png"
+DEALER_SHOTGUN_BEFORE_IMG = pygame.image.load(DEALER_SHOTGUN_BEFORE_IMG)
 # ==================================
 # Myturen_btn_imgs 디렉토리 내 이미지 파일
 # ==================================
@@ -1645,7 +1658,7 @@ def heart_damage_box(dmg_one, dmg_two):
 #     # 다각형 그리기
 #     pygame.draw.polygon(surface, BLACK, points)
 
-def dealer_bulleting(base_img):
+def moniter_heart_boxs(base_img):
     global screen, state, damage_manager # 전역 damage_manager 사용
     
     base_img = pygame.transform.scale(base_img, (screen_width, screen_height))
@@ -1664,6 +1677,41 @@ def dealer_bulleting(base_img):
     #     current_dmg_1 = 5
     #     current_dmg_2 = 6
     #     damage_manager.draw_bullet_boxes(screen, current_dmg_5, current_dmg_6)
+def test_open_bullet():
+    base_img = pygame.transform.scale(BULLET_OPEN_VIEW_IMG, (screen_width, screen_height))
+    rect = base_img.get_rect(center = (screen_width_half, screen_height_half))
+    screen.blit(base_img, rect)
+    # user.start_Shotgun(lsj_r.rint(3,8))
+    # B_def.Action.bullet
+    return
+bulleting_tick = 0
+def dealer_bulleting():
+    global screen, bulleting_tick, state
+    base_img = pygame.transform.scale(DEALER_VIEW, (screen_width, screen_height))
+    base_rect = base_img.get_rect(center = (screen_width_half, screen_height_half))
+    dealer_normal_face_img = pygame.transform.scale(DEALER_NORMAL_FACE_IMG,(int(screen_width*0.123),int(screen_height*0.183)))
+    normal_face_rect = dealer_normal_face_img.get_rect(center = (screen_width_half, screen_height_half - screen_height_half * 0.32))
+    dealer_hand_left = pygame.transform.scale(DEALER_SHOTGUN_IMG, (int(screen_width*0.193),int(screen_height*0.083)))
+    dealer_hand_left_rect = dealer_hand_left.get_rect(center = (screen_width_half, screen_height_half - screen_height_half * 0.05))
+    dealer_hand_right = pygame.transform.scale(DEALER_BULLETING_IMG, (int(screen_width*0.043),int(screen_height*0.053)))
+    # dealer_hand_right_rect = dealer_hand_right.get_rect(center = (screen_width_half, screen_height_half - screen_height_half * 0.05))
+    screen.blit(base_img, base_rect)
+    screen.blit(dealer_normal_face_img, normal_face_rect)
+    screen.blit(dealer_hand_left, dealer_hand_left_rect)
+    if item_cnt: # item 숫자 카운트 하면서 거기까지만 돌게 만들게    
+        if bulleting_tick % 10 <= 5:
+            dealer_hand_right_rect = dealer_hand_right.get_rect(center = ((screen_width_half-screen_width_half//10) - screen_width_half * 0.006 * (bulleting_tick % 10), screen_height_half - screen_height_half * 0.03))
+            pygame.time.delay(20)
+        else:
+            dealer_hand_right_rect = dealer_hand_right.get_rect(center = ((screen_width_half-screen_width_half//10) + screen_width_half * 0.006 * (bulleting_tick % 10), screen_height_half - screen_height_half * 0.03))
+        screen.blit(dealer_hand_right, dealer_hand_right_rect)
+        bulleting_tick += 1
+        item_cnt -= 1
+    else:
+        state = 'Myturn'
+        return
+    # user.start_Shotgun(lsj_r.rint(3,8))
+    # B_def.Action.bullet
 
 def Adrenaline():
     return
@@ -1697,7 +1745,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign' or state == 'complete_sign' or state == 'box_pre' or state =='box_open' or state == 'dealer_bulleting':
+                if state == 'credit' or state == 'lobby' or state == 'corridor' or state == 'sign' or state == 'complete_sign' or state == 'box_pre' or state =='box_open' or state == 'moniter_heart_boxs':
                     """
                     밑은 단축을 위해서 만들어둔 초기화임. 꼭 제출 전에 확인해서 없애달라고 얘기해줘요..
                     """
@@ -1714,7 +1762,9 @@ def main():
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_1:
                 state = 'bullet_open'
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
-                state = 'dealer_bulleting'
+                state = 'moniter_heart_boxs'
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_3:
+                state ='dealer_bulleting'
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if state == 'menu':
                     if start_btn.check_for_input(mouse_pos):
@@ -1809,8 +1859,10 @@ def main():
         elif state == 'bullet_zoomOut':
             bullet_zoomOut()
             
+        elif state == 'moniter_heart_boxs':
+            moniter_heart_boxs(GAMEROOM_TABLE_IMG)
         elif state == 'dealer_bulleting':
-            dealer_bulleting(GAMEROOM_TABLE_IMG)
+            dealer_bulleting()
         pygame.display.update()
         TIME.tick(60)
 
