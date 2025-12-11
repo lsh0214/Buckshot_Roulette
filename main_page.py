@@ -119,7 +119,7 @@ class Button():
         
         return False
 
-    def check_for_hover(self, position):
+    def check_for_hover(self, position, boolean = False):
         """
         마우스 호버(Hover) 효과를 적용합니다. (색상 변경)
         position: pygame.mouse.get_pos() 값
@@ -136,6 +136,9 @@ class Button():
             if position[0] in range(self.btn_rect.left, self.btn_rect.right) and \
             position[1] in range(self.btn_rect.top, self.btn_rect.bottom):
                 mouse_cursor_hand()
+                if boolean:
+                    shot_rect = self.image_btn.get_rect(center =(screen_width_half- (screen_width_half*0.15), screen_height_half-(screen_height_half*0.38)))
+                    screen.blit(self.image_btn, shot_rect)
             else:
                 mouse_cursor_arrow()
         
@@ -843,10 +846,10 @@ def Complete_sign(mouse_pos):
         WAIVER_ON_TABLE_img = pygame.transform.rotate(WAIVER_ON_TABLE_img, -3.2*up_waiver_tick)
         screen.blit(WAIVER_ON_TABLE_img, (int(0.44097*screen_width + up_waiver_tick), int(0.19944*screen_height + up_waiver_tick)))
     elif up_waiver_tick <= 10:
-        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
+        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + screen_width*0.347),int(0.18778*screen_height+ screen_height*0.556)))
         screen.blit(WAIVER_ON_TABLE_img, WAIVER_ON_TABLE_img.get_rect(center = (screen_width_half, screen_height_half)))
     else:
-        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + 5*200),int(0.18778*screen_height+ 5*200)))
+        WAIVER_ON_TABLE_img = pygame.transform.smoothscale(WAIVER_ON_HAND,(int(0.13993*screen_width + screen_width*0.347),int(0.18778*screen_height+ screen_height*0.556)))
         screen.blit(WAIVER_ON_TABLE_img, WAIVER_ON_TABLE_img.get_rect(center = (screen_width_half, screen_height_half)))
     
         WAIVER_ON_HAND_btn.check_for_hover(mouse_pos)
@@ -1076,6 +1079,8 @@ WAKEUP_LEFT_IMG = "inGame_imgs/wakeup_left.png"
 WAKEUP_RIGHT_IMG = "inGame_imgs/wakeup_right.png"
 DEALER_VIEW = "inGame_imgs/dealer_view.png"
 DEALER_VIEW = pygame.image.load(DEALER_VIEW)
+INGAME_SHOTGUN_IMG = pygame.image.load("inGame_imgs/shotgun.png")
+INGAME_ITEM_TABLE_VIEW = pygame.image.load("inGame_imgs/ingame_item_table_view.png")
 # ==================================
 # money_imgs 디렉토리 내 이미지 파일
 # ==================================
@@ -1612,7 +1617,7 @@ class DamageBoxManager:
         for poly in polygons:
             pygame.draw.polygon(screen, color, poly)
 
-    def draw_bullet_boxes(self, screen, dmg3, dmg4, color=(0, 0, 0)):
+    def draw_bullet_boxes(self, screen, dmg3, dmg4, dmg5, dmg6 ,color=(0, 0, 0)):
         """
         [BULLET_OPEN_VIEW_IMG] 화면용
         상자 3, 4만 그립니다. (회전 적용)
@@ -1624,7 +1629,12 @@ class DamageBoxManager:
         # Box 4 (5도 회전)
         p4 = self._get_polygon_points(self.S4_ANCHOR_TL, self.S4_ANCHOR_BL, self.DELTA_S4, dmg4, 'right_expand')
         if p4: polygons.append(self._rotate_polygon(p4, 5))
-
+        
+        p5 = self._get_polygon_points(self.S5_ANCHOR_TR, self.S5_ANCHOR_BR, self.DELTA_S5, dmg3, 'left_expand')
+        if p5: polygons.append(self._rotate_polygon(p3, 15))
+        # Box 4 (5도 회전)
+        p6 = self._get_polygon_points(self.S6_ANCHOR_TL, self.S6_ANCHOR_BL, self.DELTA_S6, dmg4, 'right_expand')
+        if p6: polygons.append(self._rotate_polygon(p4, 15))
         for poly in polygons:
             pygame.draw.polygon(screen, color, poly)
 
@@ -1672,11 +1682,11 @@ def moniter_heart_boxs(base_img):
         current_dmg_1 = 3
         current_dmg_2 = 4
         damage_manager.draw_bullet_boxes(screen, current_dmg_1, current_dmg_2)
-    # elif base_img == GAMEROOM_TABLE_IMG and damage_manager is not None: 이거 준서가 보내주면 해야함. 일단 지금은 저장한 후
+    elif base_img == GAMEROOM_TABLE_IMG and damage_manager is not None: #이거 준서가 보내주면 해야함. 일단 지금은 저장한 후
         
-    #     current_dmg_1 = 5
-    #     current_dmg_2 = 6
-    #     damage_manager.draw_bullet_boxes(screen, current_dmg_5, current_dmg_6)
+        current_dmg_5 = 3
+        current_dmg_6 = 4
+        damage_manager.draw_bullet_boxes(screen, current_dmg_5, current_dmg_6)
 def test_open_bullet():
     base_img = pygame.transform.scale(BULLET_OPEN_VIEW_IMG, (screen_width, screen_height))
     rect = base_img.get_rect(center = (screen_width_half, screen_height_half))
@@ -1685,7 +1695,7 @@ def test_open_bullet():
     # B_def.Action.bullet
     return
 bulleting_tick = 0
-def dealer_bulleting():
+def dealer_bulleting(mouse_pos):
     global screen, bulleting_tick, state
     base_img = pygame.transform.scale(DEALER_VIEW, (screen_width, screen_height))
     base_rect = base_img.get_rect(center = (screen_width_half, screen_height_half))
@@ -1698,20 +1708,45 @@ def dealer_bulleting():
     screen.blit(base_img, base_rect)
     screen.blit(dealer_normal_face_img, normal_face_rect)
     screen.blit(dealer_hand_left, dealer_hand_left_rect)
-    if item_cnt: # item 숫자 카운트 하면서 거기까지만 돌게 만들게    
+    # if item_cnt: # item 숫자 카운트 하면서 거기까지만 돌게 만들게    
+    if bulleting_tick<=40:
         if bulleting_tick % 10 <= 5:
             dealer_hand_right_rect = dealer_hand_right.get_rect(center = ((screen_width_half-screen_width_half//10) - screen_width_half * 0.006 * (bulleting_tick % 10), screen_height_half - screen_height_half * 0.03))
             pygame.time.delay(20)
         else:
             dealer_hand_right_rect = dealer_hand_right.get_rect(center = ((screen_width_half-screen_width_half//10) + screen_width_half * 0.006 * (bulleting_tick % 10), screen_height_half - screen_height_half * 0.03))
         screen.blit(dealer_hand_right, dealer_hand_right_rect)
-        bulleting_tick += 1
-        item_cnt -= 1
+    elif bulleting_tick <= 50:
+        DURATION = 10
+        local_timer = bulleting_tick - 10
+        progress = local_timer / DURATION
+        seq_offset_y = screen_height * 0.01  * progress
+        rect = base_img.get_rect()
+        rect.center = (screen_width_half, screen_height_half-seq_offset_y)
+        screen.blit(base_img, rect)
     else:
-        state = 'Myturn'
-        return
+        item_view_img = pygame.transform.scale(INGAME_ITEM_TABLE_VIEW, (screen_width, screen_height))
+        item_view_img = Button(item_view_img, screen_width_half, screen_height_half)
+        item_view_img.check_for_hover(mouse_pos, True)
+        item_view_img.update(screen)
+        shoutgun_move()
+    
+    bulleting_tick += 1
+    # item_cnt -= 1
+    # else:
+    #     shoutgun_move()
+    #     if shoutgun_move():
+    #         state = 'Myturn'
+    #         return
     # user.start_Shotgun(lsj_r.rint(3,8))
     # B_def.Action.bullet
+shoutgun_move_tick = 0
+def shoutgun_move():
+    global screen, shoutgun_move_tick
+    shot_img = pygame.transform.scale(INGAME_SHOTGUN_IMG, (int(screen_width*0.158),int(screen_height*0.489)))
+    if shoutgun_move_tick<=10:
+        shot_rect = shot_img.get_rect(center =(screen_width_half- (screen_width_half*0.05), screen_height_half-(screen_height_half*0.28)))
+        screen.blit(shot_img, shot_rect)
 
 def Adrenaline():
     return
@@ -1862,7 +1897,7 @@ def main():
         elif state == 'moniter_heart_boxs':
             moniter_heart_boxs(GAMEROOM_TABLE_IMG)
         elif state == 'dealer_bulleting':
-            dealer_bulleting()
+            dealer_bulleting(mouse_pos)
         pygame.display.update()
         TIME.tick(60)
 
