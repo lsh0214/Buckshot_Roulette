@@ -13,6 +13,7 @@ class Action:
         self.inven=[0,0,0,0,0,0,0,0]
         self.shotgun_hp=1
         self.turn_bool=[1,0]
+        self.phone_bool=[0,0]
         self.inven_list={
         "Handcuffs": self.Handcuffs,
         "Beer":self.Beer,
@@ -109,6 +110,8 @@ class Action:
         else:
             r_index=lsj_r.rint(0,len(self.bullet)-2)
             r_num=len(self.bullet)-r_index
+            bullet_type= 1 if Action.bullet[r_index] == "live bullet" else 2
+            self.phone_bool=[r_index+1, bullet_type]
             return str(r_num)+"th bullet... "+str(self.bullet[r_index])+"..."
 
     def Inverter(self,inven_index,ad=0):#극성을 전환시켜준다.
@@ -151,6 +154,9 @@ def ai_turn(ai_class,target,ing_bullet=0):
     while 1:
         end_bool=0
 
+        if len(Action.bullet) == ai_class.phone_bool[0]:
+            ing_bullet = ai_class.phone_bool[1]
+            ai_class.phone_bool= [0,0]
         #1단계 킬각확인
         if (Action.aicount[1]==0 or ing_bullet==1) and (target.hp== 1): #객체를 넣어 바로 상호작용을 하고 미리 데이터 처리를 한후 후 애니메이션을 사용함
             ret_list.append("총1")
