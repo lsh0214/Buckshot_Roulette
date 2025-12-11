@@ -1497,7 +1497,7 @@ def bullet_zoomOut():
             screen.blit(scaled_current, rect)
         else:
             # width, height가 아니라 전체 화면으로 보여주는 것이 자연스러움
-            bullet_open_view = pygame.transform.scale(BULLET_OPEN_VIEW_IMG, (screen_width, screen_height))
+            bullet_open_view = pygame.transform.scale(DEALER_VIEW, (screen_width, screen_height))
             rect = bullet_open_view.get_rect()
             rect.center = (screen_width_half, screen_height_half)
             screen.blit(bullet_open_view, rect)
@@ -1557,27 +1557,38 @@ class DamageBoxManager:
         self.w = screen_width
         self.h = screen_height
 
-        # --- [Box 1] 오른쪽 고정, 왼쪽 확장 (체력 바) ---
+        # --- [Box 1] 오른쪽 고정 (TR, BR), 왼쪽으로 확장 ---
         self.S1_ANCHOR_TR = (0.376042, 0.400556)
         self.S1_ANCHOR_BR = (0.371875, 0.491667)
-        self.DELTA_S1 = (-0.027083, -0.016667)
+        self.DELTA_S1 = (-0.018055, -0.011111) # (2/3 보정됨)
 
-        # --- [Box 2] 왼쪽 고정, 오른쪽 확장 (체력 바) ---
+        # --- [Box 2] 왼쪽 고정 (TL, BL), 오른쪽으로 확장 ---
         self.S2_ANCHOR_TL = (0.493750, 0.462778)
         self.S2_ANCHOR_BL = (0.480208, 0.569444)
-        self.DELTA_S2 = (0.044792, 0.026111)
+        self.DELTA_S2 = (0.029861, 0.017407) # (2/3 보정됨)
 
-        # --- [Box 3] 오른쪽 고정, 왼쪽 확장 (총알 뷰 - 2/3 적용) ---
-        self.S3_ANCHOR_TR = (0.730903, 0.106333)
-        self.S3_ANCHOR_BR = (0.714931, 0.168778)
-        self.DELTA_S3 = (-0.012722, -0.006667)
+        # --- [Box 3] 오른쪽 고정, 왼쪽 확장 ---
+        self.S3_ANCHOR_TR = (0.730903, 0.118333)
+        self.S3_ANCHOR_BR = (0.714931, 0.162778)
+        self.DELTA_S3 = (-0.009722, -0.006667) # (2/3 보정됨)
 
-        # --- [Box 4] 왼쪽 고정, 오른쪽 확장 (총알 뷰 - 2/3 적용) ---
+        # --- [Box 4] 왼쪽 고정, 오른쪽 확장 ---
         self.S4_ANCHOR_TL = (0.786806, 0.156667)
-        self.S4_ANCHOR_BL = (0.772222, 0.211556)
-        self.DELTA_S4 = (0.017204, 0.011111)
+        self.S4_ANCHOR_BL = (0.772222, 0.205556)
+        self.DELTA_S4 = (0.016204, 0.011111) # (2/3 보정됨)
 
-    # ... (update_resolution, _get_polygon_points, _rotate_polygon 함수는 기존과 동일) ...
+        # --- [NEW! Box 5] 오른쪽 고정, 왼쪽으로 확장 ---
+        self.S5_ANCHOR_TR = (0.783333, 0.711667) # (2256, 1281)
+        self.S5_ANCHOR_BR = (0.777778, 0.727778) # (2240, 1310)
+        # Delta: (-12, -10)
+        self.DELTA_S5 = (-0.004167, -0.005556)
+
+        # --- [NEW! Box 6] 왼쪽 고정, 오른쪽으로 확장 ---
+        self.S6_ANCHOR_TL = (0.804167, 0.740556) # (2316, 1333)
+        self.S6_ANCHOR_BL = (0.796181, 0.759444) # (2293, 1367)
+        # Delta: (+19, +18)
+        self.DELTA_S6 = (0.006597, 0.010000)
+
     def update_resolution(self, width, height):
         self.w = width
         self.h = height
@@ -1586,20 +1597,29 @@ class DamageBoxManager:
         if damage <= 0: return None
         dx, dy = delta
         w, h = self.w, self.h
+        
+        # 앵커(고정점) 절대 좌표
         anchor_t_x, anchor_t_y = int(anchor_top[0] * w), int(anchor_top[1] * h)
         anchor_b_x, anchor_b_y = int(anchor_bottom[0] * w), int(anchor_bottom[1] * h)
+        
+        # 이동량 계산
         move_x, move_y = dx * damage, dy * damage
+        
+        # 이동점(Moving Point) 절대 좌표
         moving_t_x, moving_t_y = int((anchor_top[0] + move_x) * w), int((anchor_top[1] + move_y) * h)
         moving_b_x, moving_b_y = int((anchor_bottom[0] + move_x) * w), int((anchor_bottom[1] + move_y) * h)
 
         if direction == 'left_expand':
-            return [(moving_t_x, moving_t_y), (anchor_t_x, anchor_t_y), (anchor_b_x, anchor_b_y), (moving_b_x, moving_b_y)]
+            # 고정점(오른쪽) -> 이동점(왼쪽)으로 사각형 구성
+            return [(moving_t_x, moving_t_y), (anchor_t_x, anchor_t_y), 
+                    (anchor_b_x, anchor_b_y), (moving_b_x, moving_b_y)]
         elif direction == 'right_expand':
-            return [(anchor_t_x, anchor_t_y), (moving_t_x, moving_t_y), (moving_b_x, moving_b_y), (anchor_b_x, anchor_b_y)]
+            # 고정점(왼쪽) -> 이동점(오른쪽)으로 사각형 구성
+            return [(anchor_t_x, anchor_t_y), (moving_t_x, moving_t_y), 
+                    (moving_b_x, moving_b_y), (anchor_b_x, anchor_b_y)]
         return None
 
     def _rotate_polygon(self, polygon, angle_degree):
-        # ... (기존 회전 로직 동일) ...
         if not polygon: return None
         cx = sum(p[0] for p in polygon) / len(polygon)
         cy = sum(p[1] for p in polygon) / len(polygon)
@@ -1644,13 +1664,20 @@ class DamageBoxManager:
         p4 = self._get_polygon_points(self.S4_ANCHOR_TL, self.S4_ANCHOR_BL, self.DELTA_S4, dmg4, 'right_expand')
         if p4: polygons.append(self._rotate_polygon(p4, 5))
         
-        p5 = self._get_polygon_points(self.S5_ANCHOR_TR, self.S5_ANCHOR_BR, self.DELTA_S5, dmg3, 'left_expand')
-        if p5: polygons.append(self._rotate_polygon(p3, 15))
-        # Box 4 (5도 회전)
-        p6 = self._get_polygon_points(self.S6_ANCHOR_TL, self.S6_ANCHOR_BL, self.DELTA_S6, dmg4, 'right_expand')
-        if p6: polygons.append(self._rotate_polygon(p4, 15))
         for poly in polygons:
             pygame.draw.polygon(screen, color, poly)
+    def draw_special_boxes(self, screen, dmg5, dmg6, color=(0, 0, 0)):
+        """ [NEW] Box 5, 6 그리기 """
+        polygons = []
+        # Box 5: 오른쪽 고정, 왼쪽 확장
+        p5 = self._get_polygon_points(self.S5_ANCHOR_TR, self.S5_ANCHOR_BR, self.DELTA_S5, dmg5, 'left_expand')
+        if p5: polygons.append(p5) # 필요 시 회전 추가 가능
+        
+        # Box 6: 왼쪽 고정, 오른쪽 확장
+        p6 = self._get_polygon_points(self.S6_ANCHOR_TL, self.S6_ANCHOR_BL, self.DELTA_S6, dmg6, 'right_expand')
+        if p6: polygons.append(p6) # 필요 시 회전 추가 가능
+        
+        for poly in polygons: pygame.draw.polygon(screen, color, poly)
 
 
 def heart_damage_box(dmg_one, dmg_two):
@@ -1700,7 +1727,7 @@ def moniter_heart_boxs(base_img):
         
         current_dmg_5 = 3
         current_dmg_6 = 4
-        damage_manager.draw_bullet_boxes(screen, current_dmg_5, current_dmg_6)
+        damage_manager.draw_special_boxes(screen, current_dmg_5, current_dmg_6)
 def test_open_bullet():
     base_img = pygame.transform.scale(BULLET_OPEN_VIEW_IMG, (screen_width, screen_height))
     rect = base_img.get_rect(center = (screen_width_half, screen_height_half))
