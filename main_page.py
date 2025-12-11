@@ -1342,26 +1342,38 @@ class BoxItemSystem:
 
 
 # ==================== 수정된 box_item 함수 ====================
-
+test_item = None
 def box_item(box_system, user, ai, mouse_pos):
     """
     state가 'item'일 때 호출되는 함수
     이미 박스는 열려있는 상태로 진입함
     """
-    global screen, box_view_img, open_box_img, myturn_btn_img, state
+    global screen, box_view_img, open_box_img, myturn_btn_img, state, test_item
     
-    # 1. idle 상태라면 즉시 아이템 등장 시퀀스 시작 (클릭 대기 X)
     if box_system.state == "idle":
-        # 인벤토리 로직 (예시)
-        # 실제 게임에서는 user.inventory 등에서 가져오거나 랜덤 생성
-        if user.inven[0]:
+        current=user.start_inven()
+        if current == "Handcuffs":
+            test_item = pygame.image.load(MY_HANDCUFFS_IMG).convert_alpha()
+        elif current == "Beer":
+            test_item = pygame.image.load(MY_BEER_IMG).convert_alpha()
+        elif current == "Magnifying_Glass":
+            test_item = pygame.image.load(MY_GLASSES_IMG).convert_alpha()
+        elif current == "Cigarette_Pack":
+            test_item = pygame.image.load(MY_CIGARETTE_IMG).convert_alpha()
+        elif current == "Hand_Saw":
+            test_item = pygame.image.load(MY_SAW_IMG).convert_alpha()
+        elif current == "Burner_Phone":
+            test_item = pygame.image.load(MY_PHONE_IMG).convert_alpha()
+        elif current == "Inverter":
+            test_item = pygame.image.load(MY_INVERTER_IMG).convert_alpha()
+        elif current == "BeeExpired_Mediciner":
+            test_item = pygame.image.load(MY_PILL_IMG).convert_alpha()
+        elif current == "Adrenaline":
             test_item = pygame.image.load(MY_ADRENALINE_IMG).convert_alpha()
-            test_item = pygame.transform.scale(test_item, (int(screen_width*0.15), int(screen_height*0.15)))
-        else:
-            return
-        
-        box_system.start_item_sequence(test_item, myturn_btn_img, is_right_side=False)
+
+    test_item = pygame.transform.scale(test_item, (int(screen_width*0.15), int(screen_height*0.15)))
     
+    box_system.start_item_sequence(test_item, myturn_btn_img, is_right_side=False)
     box_system.check_hover(mouse_pos)
 
     # 2. 시스템 업데이트 및 그리기
